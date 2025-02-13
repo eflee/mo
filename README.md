@@ -1,2 +1,2 @@
 # mo
-MO - An agnostic Media Organizer
+MO - an agnostic Media Organizer
