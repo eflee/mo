@@ -275,8 +275,6 @@ class TestConfigCommands:
             assert "prefer_tvdb" in result.output
 
 
-<<<<<<< HEAD
-=======
 class TestGlobalFlags:
     """Test global CLI flags."""
 
@@ -314,7 +312,6 @@ class TestGlobalFlags:
         assert "not yet implemented" in result.output
 
 
->>>>>>> 008d7cd (Adding preserve flag. Making log file CWD only.)
 class TestAdoptCommands:
     """Test adopt CLI commands (placeholders)."""
 

@@ -1098,70 +1098,70 @@ python -m mo config set omdb_api_key YOUR_KEY
 
 All features listed below are required for v1.0 release. Each phase includes comprehensive unit testing to ensure reliability and Jellyfin compatibility.
 
-### Phase 1: Core Infrastructure & Filename Utilities
+### Phase 1: Core Infrastructure & Filename Utilities ✅
 **Goal:** Build foundational components for configuration, library management, and Jellyfin-compatible filename handling.
 
-- [ ] **Filename sanitization and validation**
-  - [ ] Reserved character replacement (`< > : " / \ | ? *`)
-  - [ ] Path length validation (OS-specific limits)
-  - [ ] Unicode normalization
-  - [ ] **Unit tests:** Test all reserved characters, path length edge cases, Unicode handling
-- [ ] **Provider ID utilities**
-  - [ ] Extract provider IDs from paths using bracket notation `[imdbid-...]`, `[tmdbid-...]`
-  - [ ] Generate Jellyfin-compatible folder names with optional provider IDs
-  - [ ] Validate provider ID formats (IMDb: tt + digits, TMDB: digits, TVDB: digits)
-  - [ ] **Unit tests:** Parse various bracket formats, validate ID formats, handle malformed input
-- [ ] **Configuration system**
-  - [ ] Hierarchical config loading (local `.mo.conf` → user `~/.config/mo/config`)
-  - [ ] INI format parser with validation
-  - [ ] `config set <key> <value>` command
-  - [ ] `config list` command with redacted API keys
-  - [ ] Platform-specific user config paths (XDG on Linux, AppData on Windows, etc.)
-  - [ ] Error handling for missing config with helpful messages
-  - [ ] **Unit tests:** Config file parsing, hierarchical merging, platform path detection, invalid config handling
-- [ ] **Library management**
-  - [ ] Library data structure (name, type: movie|show, root directory)
-  - [ ] `library add <name> <movie|show> <path>` with validation
-  - [ ] `library remove <name>` with confirmation
-  - [ ] `library info <name>` display
-  - [ ] Directory existence validation
-  - [ ] Duplicate library name detection
-  - [ ] Persistence to config file
-  - [ ] **Unit tests:** Add/remove/info operations, validation rules, persistence, duplicate detection
-- [ ] **CLI framework**
-  - [ ] Argument parser for commands and subcommands (argparse or Click)
-  - [ ] Command routing (library, adopt, config)
-  - [ ] Help system and usage documentation
-  - [ ] `--force`, `--verbose`, `--dry-run` global flags
-  - [ ] **Unit tests:** Argument parsing, command routing, flag handling
+- [x] **Filename sanitization and validation**
+  - [x] Reserved character replacement (`< > : " / \ | ? *`)
+  - [x] Path length validation (OS-specific limits)
+  - [x] Unicode normalization
+  - [x] **Unit tests:** Test all reserved characters, path length edge cases, Unicode handling
+- [x] **Provider ID utilities**
+  - [x] Extract provider IDs from paths using bracket notation `[imdbid-...]`, `[tmdbid-...]`
+  - [x] Generate Jellyfin-compatible folder names with optional provider IDs
+  - [x] Validate provider ID formats (IMDb: tt + digits, TMDB: digits, TVDB: digits)
+  - [x] **Unit tests:** Parse various bracket formats, validate ID formats, handle malformed input
+- [x] **Configuration system**
+  - [x] Hierarchical config loading (local `.mo.conf` → user `~/.config/mo/config`)
+  - [x] INI format parser with validation
+  - [x] `config set <key> <value>` command
+  - [x] `config list` command with redacted API keys
+  - [x] Platform-specific user config paths (XDG on Linux, AppData on Windows, etc.)
+  - [x] Error handling for missing config with helpful messages
+  - [x] **Unit tests:** Config file parsing, hierarchical merging, platform path detection, invalid config handling
+- [x] **Library management**
+  - [x] Library data structure (name, type: movie|show, root directory)
+  - [x] `library add <name> <movie|show> <path>` with validation
+  - [x] `library remove <name>` with confirmation
+  - [x] `library info <name>` display
+  - [x] Directory existence validation
+  - [x] Duplicate library name detection
+  - [x] Persistence to config file
+  - [x] **Unit tests:** Add/remove/info operations, validation rules, persistence, duplicate detection
+- [x] **CLI framework**
+  - [x] Argument parser for commands and subcommands (Click)
+  - [x] Command routing (library, adopt, config)
+  - [x] Help system and usage documentation
+  - [x] `--force`, `--verbose`, `--dry-run`, `--preserve` global flags
+  - [x] **Unit tests:** Argument parsing, command routing, flag handling
 
-### Phase 2: Jellyfin Filename Parsing
+### Phase 2: Jellyfin Filename Parsing ✅
 **Goal:** Implement Jellyfin-compatible episode and movie filename parsing with full validation.
 
-- [ ] **Episode filename parser**
-  - [ ] Regex-based parsing matching Jellyfin's `EpisodePathParser.cs` logic
-  - [ ] Standard formats: `S##E##`, `s##x##`, `##x##`
-  - [ ] Multi-episode: `S01E01-E02`, `S01E01xE02xE03`, `02x03-04-15`
-  - [ ] Absolute numbering for anime (e.g., `Show 001.mkv`)
-  - [ ] Date-based episodes (e.g., `2023-01-15`)
-  - [ ] Season validation: reject seasons 200-1927 and >2500 (avoid resolution false positives)
-  - [ ] Ending episode validation: reject if looks like resolution (1080, 720, etc.)
-  - [ ] Series name extraction with trimming of `_`, `.`, `-`
-  - [ ] **Unit tests:** All Jellyfin test cases from `EpisodePathParserTest.cs`, edge cases, invalid formats
-- [ ] **Season folder detection**
-  - [ ] Recognize `Season ##` format (with or without leading zeros)
-  - [ ] Reject abbreviated formats like `S01`
-  - [ ] Special handling for Season 0 (Specials)
-  - [ ] **Unit tests:** Valid season folders, invalid formats, Season 0 handling
-- [ ] **Movie filename parser**
-  - [ ] Extract title and year from filenames/folders
-  - [ ] Provider ID extraction from paths
-  - [ ] DVD/BluRay structure detection (`VIDEO_TS/`, `BDMV/`)
-  - [ ] **Unit tests:** Title/year extraction, provider ID parsing, DVD/BluRay detection
-- [ ] **Sample file detection**
-  - [ ] Regex matching `\bsample\b` (case-insensitive)
-  - [ ] Flag files for user confirmation
-  - [ ] **Unit tests:** Sample detection, false positive avoidance
+- [x] **Episode filename parser**
+  - [x] Regex-based parsing matching Jellyfin's `EpisodePathParser.cs` logic
+  - [x] Standard formats: `S##E##`, `s##x##`, `##x##`
+  - [x] Multi-episode: `S01E01-E02`, `S01E01xE02xE03`, `02x03-04-15`
+  - [x] Absolute numbering for anime (e.g., `Show 001.mkv`)
+  - [x] Date-based episodes (e.g., `2023-01-15`)
+  - [x] Season validation: reject seasons 200-1927 and >2500 (avoid resolution false positives)
+  - [x] Ending episode validation: reject if looks like resolution (1080, 720, etc.)
+  - [x] Series name extraction with trimming of `_`, `.`, `-`
+  - [x] **Unit tests:** All Jellyfin test cases from `EpisodePathParserTest.cs`, edge cases, invalid formats
+- [x] **Season folder detection**
+  - [x] Recognize `Season ##` format (with or without leading zeros)
+  - [x] Reject abbreviated formats like `S01`
+  - [x] Special handling for Season 0 (Specials)
+  - [x] **Unit tests:** Valid season folders, invalid formats, Season 0 handling
+- [x] **Movie filename parser**
+  - [x] Extract title and year from filenames/folders
+  - [x] Provider ID extraction from paths
+  - [x] DVD/BluRay structure detection (`VIDEO_TS/`, `BDMV/`)
+  - [x] **Unit tests:** Title/year extraction, provider ID parsing, DVD/BluRay detection
+- [x] **Sample file detection**
+  - [x] Regex matching `\bsample\b` (case-insensitive)
+  - [x] Flag files for user confirmation
+  - [x] **Unit tests:** Sample detection, false positive avoidance
 
 ### Phase 3: Metadata Provider Integration
 **Goal:** Integrate TMDB, TheTVDB, and OMDb APIs with caching and error handling.
