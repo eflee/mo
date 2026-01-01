@@ -1,0 +1,26 @@
+[libraries]
+# Define your library paths here
+# movies = /media/jellyfin/Movies
+# tv = /media/jellyfin/TV Shows
+
+[library_types]
+# Specify library types (movie or show)
+# movies = movie
+# tv = show
+
+[metadata]
+# API keys for metadata providers
+# Get TMDB key: https://www.themoviedb.org/settings/api
+# Get TVDB key: https://thetvdb.com/dashboard/account/apikeys
+# Get OMDb key: http://www.omdbapi.com/apikey.aspx
+tmdb_api_key = YOUR_TMDB_KEY_HERE
+tvdb_api_key = YOUR_TVDB_KEY_HERE
+omdb_api_key = YOUR_OMDB_KEY_HERE
+
+[preferences]
+# Prefer TheTVDB over TMDB for TV shows
+prefer_tvdb = true
+# Include provider IDs in folder names (e.g., "Movie [imdbid-tt1234567]")
+include_provider_ids_in_paths = false
+# Cache TTL in hours
+cache_ttl_hours = 24
