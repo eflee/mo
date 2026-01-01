@@ -3,6 +3,10 @@
 Based on Jellyfin's EpisodePathParser.cs logic.
 Supports multiple episode numbering patterns including standard (S##E##),
 alternate (s##x##), multi-episode, date-based, and absolute numbering.
+
+This parser is specifically for TV show episodes. For movies, use
+the movie parser (mo.parsers.movie) which extracts title and year instead
+of season/episode information.
 """
 
 import re
@@ -14,11 +18,7 @@ from typing import List, Optional
 
 @dataclass
 class EpisodeInfo:
-    """
-    Parsed episode information from a filename.
-
-    Single Responsibility: Data structure for episode metadata.
-    """
+    """Parsed episode information from a filename."""
 
     series_name: Optional[str] = None
     season_number: Optional[int] = None
@@ -30,7 +30,6 @@ class EpisodeInfo:
     year: Optional[int] = None
 
 
-# Compiled regex patterns for performance (DRY - compile once)
 # Based on Jellyfin's EpisodePathParser.cs
 
 # Standard patterns: S01E02, s01x02, 1x02
@@ -49,7 +48,7 @@ _STANDARD_PATTERN = re.compile(
     re.VERBOSE | re.IGNORECASE,
 )
 
-# Multi-episode pattern: S01E01-E02-E03 or S01E01xE02xE03
+# Multi-episode pattern: S01E01-E02, S01E01-02, S01E01xE02xE03
 _MULTI_EPISODE_PATTERN = re.compile(
     r"""
     (?:s|season\s*)?              # Optional 's' or 'season '
@@ -57,9 +56,9 @@ _MULTI_EPISODE_PATTERN = re.compile(
     \s*[ex]\s*                    # Separator
     (?P<episode>\d{1,3})          # Starting episode
     (?:                           # Additional episodes
-        \s*[-xeE]\s*
-        (?:e)?
-        \d{1,3}
+        \s*[-xeE]\s*              # Separator: dash, x, e, or E
+        (?:e)?                    # Optional 'e' or 'E'
+        \d{1,3}                   # Episode number
     )+
     """,
     re.VERBOSE | re.IGNORECASE,
@@ -94,7 +93,6 @@ _INVALID_SEASON_MIN = 200
 _INVALID_SEASON_MAX = 1927
 _INVALID_SEASON_THRESHOLD = 2500
 
-# Common video resolutions to avoid treating as episode numbers
 _COMMON_RESOLUTIONS = {480, 576, 720, 1080, 2160, 4320}
 
 
@@ -159,14 +157,12 @@ def parse_episode_filename(filename: str) -> Optional[EpisodeInfo]:
     """
     Parse episode information from a filename.
 
-    Single Responsibility: Only parses filename patterns.
-
     This function attempts to extract episode information using multiple
     patterns in order of specificity:
-    1. Standard patterns (S##E##, s##x##)
-    2. Multi-episode patterns
-    3. Date-based patterns
-    4. Absolute numbering patterns
+    1. Multi-episode patterns (S01E01-E02, S01E01xE02)
+    2. Standard patterns (S##E##, s##x##)
+    3. Date-based patterns (YYYY-MM-DD)
+    4. Absolute numbering (Show 001)
 
     Args:
         filename: Episode filename (can include path)
@@ -305,8 +301,6 @@ def parse_episode_filename(filename: str) -> Optional[EpisodeInfo]:
 def extract_all_episode_numbers(filename: str) -> List[int]:
     """
     Extract all episode numbers from a multi-episode filename.
-
-    Single Responsibility: Only extracts episode number list.
 
     Args:
         filename: Episode filename

@@ -1,6 +1,9 @@
 """Movie filename parser compatible with Jellyfin.
 
 Extracts title, year, and provider IDs from movie filenames and folder names.
+
+This parser is specifically for movies. For TV show episodes, use the episode
+parser (mo.parsers.episode) which extracts season/episode information instead.
 """
 
 import re
@@ -13,11 +16,7 @@ from mo.parsers.provider_id import extract_provider_ids
 
 @dataclass
 class MovieInfo:
-    """
-    Parsed movie information from a filename or folder.
-
-    Single Responsibility: Data structure for movie metadata.
-    """
+    """Parsed movie information from a filename or folder."""
 
     title: str
     year: Optional[int] = None
@@ -25,8 +24,6 @@ class MovieInfo:
     is_dvd: bool = False
     is_bluray: bool = False
 
-
-# Compiled regex patterns (DRY - compile once)
 
 # Year pattern: (1900-2099) in parentheses or brackets
 _YEAR_PATTERN = re.compile(
@@ -38,7 +35,6 @@ _YEAR_PATTERN = re.compile(
     re.VERBOSE,
 )
 
-# DVD/BluRay folder patterns
 _DVD_FOLDERS = {"VIDEO_TS", "AUDIO_TS"}
 _BLURAY_FOLDERS = {"BDMV", "CERTIFICATE"}
 
@@ -46,8 +42,6 @@ _BLURAY_FOLDERS = {"BDMV", "CERTIFICATE"}
 def parse_movie_filename(filename: str) -> Optional[MovieInfo]:
     """
     Parse movie information from a filename or folder name.
-
-    Single Responsibility: Only parses filename patterns.
 
     Extracts:
     - Title (before year or end of filename)
@@ -136,8 +130,6 @@ def is_dvd_folder(path: Path) -> bool:
     """
     Check if a path is a DVD folder structure.
 
-    Single Responsibility: Only checks for DVD structure.
-
     Args:
         path: Path to check
 
@@ -173,8 +165,6 @@ def is_bluray_folder(path: Path) -> bool:
     """
     Check if a path is a BluRay folder structure.
 
-    Single Responsibility: Only checks for BluRay structure.
-
     Args:
         path: Path to check
 
@@ -209,8 +199,6 @@ def is_bluray_folder(path: Path) -> bool:
 def parse_movie_folder(folder_path: Path) -> Optional[MovieInfo]:
     """
     Parse movie information from a folder.
-
-    Single Responsibility: Only parses folder structure.
 
     Handles DVD/BluRay detection and uses folder name for metadata.
 

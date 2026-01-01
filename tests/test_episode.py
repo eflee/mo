@@ -89,6 +89,14 @@ class TestMultiEpisodePatterns:
         assert result.episode_number == 1
         assert result.ending_episode_number == 3
 
+    def test_s01e01_dash_02(self):
+        """Test S01E01-02 pattern (without E before second number)."""
+        result = parse_episode_filename("Show.S01E05-06.mkv")
+        assert result is not None
+        assert result.season_number == 1
+        assert result.episode_number == 5
+        assert result.ending_episode_number == 6
+
     def test_s01e01_dash_e02_dash_e03(self):
         """Test S01E01-E02-E03 pattern."""
         result = parse_episode_filename("Show.S01E05-E06-E07.mkv")
@@ -113,6 +121,11 @@ class TestMultiEpisodePatterns:
     def test_extract_all_episodes_range(self):
         """Test extracting episode range."""
         episodes = extract_all_episode_numbers("Show.S01E05-E07.mkv")
+        assert episodes == [5, 6, 7]
+
+    def test_extract_all_episodes_without_e(self):
+        """Test extracting episodes from S01E01-02 format."""
+        episodes = extract_all_episode_numbers("Show.S01E05-07.mkv")
         assert episodes == [5, 6, 7]
 
 

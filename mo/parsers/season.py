@@ -8,9 +8,6 @@ from pathlib import Path
 from typing import Optional
 
 
-# Season folder pattern (DRY - compile once)
-# Jellyfin recognizes "Season ##" format (with or without leading zeros)
-# NOT abbreviated formats like "S01"
 _SEASON_FOLDER_PATTERN = re.compile(
     r"""
     ^                           # Start of string
@@ -22,7 +19,6 @@ _SEASON_FOLDER_PATTERN = re.compile(
     re.VERBOSE | re.IGNORECASE,
 )
 
-# Special season names
 _SPECIALS_NAMES = {
     "specials",
     "special",
@@ -36,8 +32,6 @@ _SPECIALS_NAMES = {
 def is_season_folder(folder_name: str) -> bool:
     """
     Check if a folder name represents a season folder.
-
-    Single Responsibility: Only validates season folder naming.
 
     Jellyfin recognizes:
     - "Season ##" format (case-insensitive)
@@ -82,8 +76,6 @@ def extract_season_number(folder_name: str) -> Optional[int]:
     """
     Extract season number from a folder name.
 
-    Single Responsibility: Only extracts season number.
-
     Args:
         folder_name: Name of the folder
 
@@ -122,8 +114,6 @@ def format_season_folder_name(season_number: int) -> str:
     """
     Generate a Jellyfin-compatible season folder name.
 
-    Single Responsibility: Only generates folder names.
-
     Args:
         season_number: Season number
 
@@ -150,8 +140,6 @@ def format_season_folder_name(season_number: int) -> str:
 def detect_season_from_path(path: Path) -> Optional[int]:
     """
     Detect season number from a path.
-
-    Single Responsibility: Only detects season from directory structure.
 
     Checks parent directories for season folder names.
 

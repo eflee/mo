@@ -1,23 +1,22 @@
 """Sample file detection compatible with Jellyfin.
 
 Based on Jellyfin's sample file filtering logic.
+
+Jellyfin uses sample detection to automatically filter out promotional
+sample files during library scanning. This prevents sample files from
+appearing in the media library alongside actual content.
 """
 
 import re
 from pathlib import Path
 
 
-# Sample file pattern (DRY - compile once)
-# Jellyfin uses \bsample\b to match the word "sample" with word boundaries
-# We extend this to also treat underscores as word boundaries
 _SAMPLE_PATTERN = re.compile(r"(?:^|[^a-z])sample(?:[^a-z]|$)", re.IGNORECASE)
 
 
 def is_sample_file(filename: str) -> bool:
     """
     Check if a filename indicates a sample file.
-
-    Single Responsibility: Only detects sample files.
 
     Jellyfin ignores files matching the pattern \bsample\b (case-insensitive).
     This matches the word "sample" with word boundaries, so:
@@ -60,8 +59,6 @@ def filter_sample_files(filenames: list[str]) -> list[str]:
     """
     Filter out sample files from a list of filenames.
 
-    Single Responsibility: Only filters sample files.
-
     Args:
         filenames: List of filenames
 
@@ -78,8 +75,6 @@ def filter_sample_files(filenames: list[str]) -> list[str]:
 def detect_sample_files(filenames: list[str]) -> list[str]:
     """
     Detect sample files from a list of filenames.
-
-    Single Responsibility: Only identifies sample files.
 
     Args:
         filenames: List of filenames
