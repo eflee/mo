@@ -1,8 +1,7 @@
 """Base metadata provider interface and exceptions."""
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Protocol
 
 
 class ProviderError(Exception):
@@ -114,20 +113,14 @@ class EpisodeMetadata:
     raw_data: Optional[Dict[str, Any]] = None
 
 
-class MetadataProvider(ABC):
-    """Base class for metadata providers."""
+class MetadataProvider(Protocol):
+    """Protocol for metadata providers.
 
-    def __init__(self, api_key: Optional[str] = None, cache_enabled: bool = True):
-        """Initialize provider.
+    Providers should implement this interface to be compatible with the
+    metadata fetching system. All methods should raise ProviderError or
+    its subclasses on failure.
+    """
 
-        Args:
-            api_key: API key/token for authentication
-            cache_enabled: Whether to enable caching
-        """
-        self.api_key = api_key
-        self.cache_enabled = cache_enabled
-
-    @abstractmethod
     def search_movie(self, title: str, year: Optional[int] = None) -> List[SearchResult]:
         """Search for movies by title and optional year.
 
@@ -142,9 +135,8 @@ class MetadataProvider(ABC):
             ProviderError: If search fails
             RateLimitError: If rate limit exceeded
         """
-        pass
+        ...
 
-    @abstractmethod
     def search_tv(self, title: str, year: Optional[int] = None) -> List[SearchResult]:
         """Search for TV shows by title and optional year.
 
@@ -159,9 +151,8 @@ class MetadataProvider(ABC):
             ProviderError: If search fails
             RateLimitError: If rate limit exceeded
         """
-        pass
+        ...
 
-    @abstractmethod
     def get_movie(self, movie_id: str) -> MovieMetadata:
         """Get detailed movie metadata.
 
@@ -176,9 +167,8 @@ class MetadataProvider(ABC):
             NotFoundError: If movie not found
             RateLimitError: If rate limit exceeded
         """
-        pass
+        ...
 
-    @abstractmethod
     def get_tv_show(self, show_id: str) -> TVShowMetadata:
         """Get detailed TV show metadata.
 
@@ -193,9 +183,8 @@ class MetadataProvider(ABC):
             NotFoundError: If show not found
             RateLimitError: If rate limit exceeded
         """
-        pass
+        ...
 
-    @abstractmethod
     def get_episode(
         self, show_id: str, season_number: int, episode_number: int
     ) -> EpisodeMetadata:
@@ -214,4 +203,4 @@ class MetadataProvider(ABC):
             NotFoundError: If episode not found
             RateLimitError: If rate limit exceeded
         """
-        pass
+        ...
