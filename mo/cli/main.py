@@ -50,13 +50,28 @@ def get_config() -> Optional[Config]:
     is_flag=True,
     help="Show what would be done without making changes",
 )
+<<<<<<< HEAD
 @click.pass_context
 def cli(ctx, verbose: bool, dry_run: bool):
+=======
+@click.option(
+    "--preserve",
+    "-p",
+    is_flag=True,
+    help="Preserve original files (copy instead of move)",
+)
+@click.pass_context
+def cli(ctx, verbose: bool, dry_run: bool, preserve: bool):
+>>>>>>> 008d7cd (Adding preserve flag. Making log file CWD only.)
     """mo.py - Media Organizer for Jellyfin-compatible media libraries."""
     # Store global options in context
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = verbose
     ctx.obj["dry_run"] = dry_run
+<<<<<<< HEAD
+=======
+    ctx.obj["preserve"] = preserve
+>>>>>>> 008d7cd (Adding preserve flag. Making log file CWD only.)
 
 
 # ============================================================================

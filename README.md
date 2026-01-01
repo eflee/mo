@@ -113,13 +113,14 @@ Show Name (Year)/
 ### Action Logging
 
 Every adoption operation:
-- Creates a timestamped log file in the **source directory** (e.g., `.mo_action_log_20260101_143022.json`)
+- Creates a timestamped log file in the **current working directory** (e.g., `.mo_action_log_20260101_143022.json`)
 - Records all actions taken:
   - Original file paths
   - Destination paths
   - Directories created
   - NFO files written
   - Timestamps
+  - Operation mode (move or copy)
 - Log can be used to manually reverse operations if needed
 
 ## Jellyfin Compatibility
@@ -263,10 +264,22 @@ Assumes the target is a directory storing all or part of a specific season (numb
 
 Uses current directory if `[directory]` is not specified.
 
+#### Global Flags
+
+mo.py supports the following global flags for all commands:
+
+- **`--verbose` / `-v`**: Enable verbose output for detailed logging
+- **`--dry-run`**: Preview actions without making any changes (shows what would be done)
+- **`--preserve` / `-p`**: Preserve original files by copying instead of moving
+  - Default behavior: Files are **moved** from source to library
+  - With `--preserve`: Files are **copied**, leaving originals intact
+  - Action log records the operation mode used
+
 #### Safety and Confirmation
 
 - **Always prompts before overwriting** unless `--force` flag is provided
 - **Shows action plan**: `mo.py adopt` always outputs the complete set of actions it will take and confirms with the user before proceeding
+- **Operation mode**: By default, files are moved. Use `--preserve` to copy instead
 
 **Examples:**
 
@@ -286,6 +299,15 @@ mo.py adopt show --season 2 /downloads/The.Wire.Season.2
 
 # Force adoption without prompting (use with caution)
 mo.py adopt movie --force /downloads/SomeMovie/
+
+# Preserve original files (copy instead of move)
+mo.py --preserve adopt movie /downloads/Inception.2010
+
+# Combine flags: verbose output and preserve mode
+mo.py -v --preserve adopt show /downloads/Breaking.Bad/
+
+# Dry run to preview actions without making changes
+mo.py --dry-run adopt movie /downloads/SomeMovie/
 ```
 
 ## Configuration

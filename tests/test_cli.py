@@ -275,6 +275,46 @@ class TestConfigCommands:
             assert "prefer_tvdb" in result.output
 
 
+<<<<<<< HEAD
+=======
+class TestGlobalFlags:
+    """Test global CLI flags."""
+
+    def test_preserve_flag(self, runner, tmp_path):
+        """Test --preserve flag sets preserve mode."""
+        movie_file = tmp_path / "movie.mkv"
+        movie_file.touch()
+
+        result = runner.invoke(cli, ["--preserve", "adopt", "movie", str(movie_file)])
+
+        assert result.exit_code == 0
+        # Placeholder will still show not implemented, but flag should be accepted
+        assert "not yet implemented" in result.output
+
+    def test_preserve_flag_short(self, runner, tmp_path):
+        """Test -p short flag for preserve mode."""
+        movie_file = tmp_path / "movie.mkv"
+        movie_file.touch()
+
+        result = runner.invoke(cli, ["-p", "adopt", "movie", str(movie_file)])
+
+        assert result.exit_code == 0
+        assert "not yet implemented" in result.output
+
+    def test_combined_flags(self, runner, tmp_path):
+        """Test combining multiple global flags."""
+        movie_file = tmp_path / "movie.mkv"
+        movie_file.touch()
+
+        result = runner.invoke(
+            cli, ["-v", "--preserve", "--dry-run", "adopt", "movie", str(movie_file)]
+        )
+
+        assert result.exit_code == 0
+        assert "not yet implemented" in result.output
+
+
+>>>>>>> 008d7cd (Adding preserve flag. Making log file CWD only.)
 class TestAdoptCommands:
     """Test adopt CLI commands (placeholders)."""
 
