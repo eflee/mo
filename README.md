@@ -1106,7 +1106,7 @@ Movies are organized with each movie in its own dedicated folder:
 /Movies/
   Movie Name (Year)/
     Movie Name (Year).ext        # Main movie file (preserves source extension)
-    movie.nfo                    # Jellyfin metadata file
+    Movie Name (Year).nfo        # Jellyfin metadata (filename-based)
     Movie Name (Year)-poster.jpg # Optional: movie poster
     Movie Name (Year)-fanart.jpg # Optional: backdrop/fanart
     extras/                      # Optional: extra features
@@ -1121,9 +1121,11 @@ Movies are organized with each movie in its own dedicated folder:
 **Naming Rules:**
 - Folder name: `Movie Name (Year)/` where Year is the release year
 - Main file: `Movie Name (Year).ext` matching the folder name
-- NFO file: Always `movie.nfo` (not filename-based)
+- NFO file: `Movie Name (Year).nfo` (filename-based, matches video filename)
 - Optional provider ID: `Movie Name (Year) [imdbid-tt1234567]/`
 - Extras: Organized in `extras/` with Jellyfin-recognized subdirectories
+
+**Philosophy:** NFO files complement proper Jellyfin structure and filenames - they provide additional metadata but don't replace the need for correct naming conventions.
 
 **Supported Extras Types:**
 - `behindthescenes/` - Behind the scenes content
@@ -1395,7 +1397,7 @@ All features listed below are required for v1.0 release. Each phase includes com
   - [ ] Generate canonical folder structure (see "Target Jellyfin Structure" above):
     - Folder: `Movie Name (Year)/` or `Movie Name (Year) [imdbid-tt1234567]/`
     - Main file: `Movie Name (Year).ext` (preserves source extension)
-    - NFO file: `movie.nfo` (always, per Jellyfin standard)
+    - NFO file: `Movie Name (Year).nfo` (filename-based, matches video file)
     - Extras: `extras/behindthescenes/`, `extras/deleted/`, etc. if present
   - [ ] Sanitize all filenames (reserved characters, path length validation)
   - [ ] Detect DVD/Blu-ray structures and plan appropriate NFO placement
