@@ -297,3 +297,73 @@ class TestFileIdentification:
 
         # Subtitle should be in subtitles
         assert subtitle_file in files["subtitles"]
+
+
+class TestErrorHandling:
+    """Test error handling in MovieAdoptionWorkflow."""
+
+    def test_missing_tmdb_api_key(self, temp_dir):
+        """Test that workflow raises MoError when TMDB API key is not configured."""
+        from mo.utils.errors import MoError
+
+        config = Mock(spec=Config)
+        config.get.return_value = None  # No API key configured
+
+        with pytest.raises(MoError, match="TMDB API key not configured"):
+            MovieAdoptionWorkflow(config=config, dry_run=True)
+
+    def test_provider_error_during_metadata_fetch(self, mock_config, mock_library, temp_dir):
+        """Test handling of ProviderError during metadata fetch."""
+        from mo.providers.base import ProviderError
+
+        workflow = MovieAdoptionWorkflow(config=mock_config, dry_run=True)
+
+        # Mock the TMDB provider to raise ProviderError
+        workflow.tmdb.get_movie = Mock(side_effect=ProviderError("API Error"))
+
+        # Create a mock search result
+        search_result = Mock()
+        search_result.id = "550"
+
+        # Test that _get_full_metadata handles the error gracefully
+        metadata = workflow._get_full_metadata(search_result)
+
+        assert metadata is None
+
+    def test_keyboard_interrupt_during_library_selection(self, mock_config, temp_dir):
+        """Test handling of KeyboardInterrupt during library selection."""
+        from mo.utils.errors import MoError
+
+        workflow = MovieAdoptionWorkflow(config=mock_config, dry_run=True)
+
+        # Create multiple mock libraries to trigger selection prompt
+        lib1 = Mock(spec=Library)
+        lib1.name = "library1"
+        lib1.library_type = "movie"
+        lib1.path = temp_dir / "lib1"
+
+        lib2 = Mock(spec=Library)
+        lib2.name = "library2"
+        lib2.library_type = "movie"
+        lib2.path = temp_dir / "lib2"
+
+        workflow.library_manager.list = Mock(return_value=[lib1, lib2])
+
+        # Mock prompt to raise KeyboardInterrupt
+        with patch("mo.workflows.movie.prompt", side_effect=KeyboardInterrupt):
+            with pytest.raises(MoError, match="Library selection cancelled"):
+                workflow._select_library(None)
+
+    def test_eoferror_during_file_confirmation(self, mock_config, temp_dir):
+        """Test handling of EOFError during file confirmation."""
+        workflow = MovieAdoptionWorkflow(config=mock_config, dry_run=True)
+
+        # Create a test movie file
+        movie_file = temp_dir / "movie.mkv"
+        movie_file.write_text("fake content")
+
+        # Mock prompt to raise EOFError
+        with patch("mo.workflows.movie.prompt", side_effect=EOFError):
+            files = workflow._identify_files(movie_file)
+
+        assert files is None
