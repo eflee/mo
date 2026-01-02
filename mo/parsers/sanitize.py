@@ -57,7 +57,7 @@ def sanitize_filename(filename: str, replacement: str = "") -> str:
     sanitized = _RESERVED_CHARS_PATTERN.sub(replacement, sanitized)
 
     # Remove leading/trailing whitespace and dots
-    sanitized = sanitized.strip(). strip(".")
+    sanitized = sanitized.strip().strip(".")
 
     if not sanitized:
         raise ValidationError(
