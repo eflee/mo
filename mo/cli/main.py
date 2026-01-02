@@ -411,17 +411,49 @@ def movie(ctx, directory: Optional[Path], library: Optional[str], force: bool):
     type=int,
     help="Season number (for adopting a single season)",
 )
-def show(directory: Optional[Path], library: Optional[str], season: Optional[int]):
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Skip confirmation prompts",
+)
+@click.pass_context
+def show(ctx, directory: Optional[Path], library: Optional[str], season: Optional[int], force: bool):
     """
     Adopt a TV show directory.
 
     DIRECTORY: Path to TV show directory (defaults to current directory)
     """
-    console.print("[yellow]TV show adoption not yet implemented (Phase 7).[/yellow]")
-    if directory:
-        console.print(f"Would adopt: {directory}")
-    if season:
-        console.print(f"Season: {season}")
+    from mo.workflows import TVShowAdoptionWorkflow
+
+    # Use current directory if not specified
+    source_path = directory or Path.cwd()
+
+    config = get_config()
+    if config is None:
+        sys.exit(1)
+
+    try:
+        workflow = TVShowAdoptionWorkflow(
+            config=config,
+            console=console,
+            verbose=ctx.obj.get("verbose", False),
+            dry_run=ctx.obj.get("dry_run", False),
+        )
+
+        success = workflow.adopt(
+            source_path=source_path,
+            library_name=library,
+            preserve=ctx.obj.get("preserve", False),
+            force=force,
+            season_filter=season,
+        )
+
+        sys.exit(0 if success else 1)
+
+    except MoError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        sys.exit(1)
 
 
 def main():
