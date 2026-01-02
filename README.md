@@ -1094,6 +1094,113 @@ python -m mo config set omdb_api_key YOUR_KEY
    - Validate provider IDs match expected formats
    - Reject suspiciously long paths/filenames
 
+## Target Jellyfin Structure
+
+**mo.py** organizes media into Jellyfin-compatible structures. Below are the canonical formats used for all adopted media.
+
+### Movie Library Structure
+
+Movies are organized with each movie in its own dedicated folder:
+
+```
+/Movies/
+  Movie Name (Year)/
+    Movie Name (Year).ext        # Main movie file (preserves source extension)
+    movie.nfo                    # Jellyfin metadata file
+    Movie Name (Year)-poster.jpg # Optional: movie poster
+    Movie Name (Year)-fanart.jpg # Optional: backdrop/fanart
+    extras/                      # Optional: extra features
+      behindthescenes/
+        Behind the Scenes.mkv
+      deleted/
+        Deleted Scene 1.mkv
+      interviews/
+        Director Interview.mkv
+```
+
+**Naming Rules:**
+- Folder name: `Movie Name (Year)/` where Year is the release year
+- Main file: `Movie Name (Year).ext` matching the folder name
+- NFO file: Always `movie.nfo` (not filename-based)
+- Optional provider ID: `Movie Name (Year) [imdbid-tt1234567]/`
+- Extras: Organized in `extras/` with Jellyfin-recognized subdirectories
+
+**Supported Extras Types:**
+- `behindthescenes/` - Behind the scenes content
+- `deleted/` - Deleted scenes
+- `interviews/` - Cast/crew interviews
+- `scenes/` - Additional scenes
+- `samples/` - Trailers/samples
+- `shorts/` - Short films
+- `featurettes/` - Featurettes
+- `clips/` - Clips
+
+### TV Show Library Structure
+
+TV shows are organized with a series folder containing season subdirectories:
+
+```
+/TV Shows/
+  Show Name/
+    tvshow.nfo                   # Series metadata
+    poster.jpg                   # Optional: series poster
+    Season 01/
+      Show Name - S01E01 - Episode Title.ext
+      Show Name - S01E01.nfo
+      Show Name - S01E02 - Episode Title.ext
+      Show Name - S01E02.nfo
+      Show Name - S01E01-thumb.jpg  # Optional: episode thumbnail
+    Season 02/
+      Show Name - S02E01 - Episode Title.ext
+      Show Name - S02E01.nfo
+    Season 00/                   # Specials
+      Show Name - S00E01 - Special Episode.ext
+      Show Name - S00E01.nfo
+```
+
+**Naming Rules:**
+- Series folder: `Show Name/` (optionally with year: `Show Name (Year)/`)
+- Season folders: `Season 01/`, `Season 02/`, etc. (zero-padded, full word "Season")
+- Episode files: `Show Name - S##E## - Episode Title.ext`
+- Episode NFO: `Show Name - S##E##.nfo` (matching episode filename)
+- Series NFO: `tvshow.nfo` at series root
+- Optional provider ID: `Show Name [tvdbid-123456]/`
+
+**Season Numbering:**
+- Regular seasons: `Season 01`, `Season 02`, etc. (zero-padded)
+- Specials: `Season 00` (for specials, extras, OVAs)
+- Always use full word "Season" (not "S01")
+
+**Multi-Episode Files:**
+- Filename: `Show Name - S01E01-E02 - Episode Titles.ext`
+- NFO: Single file with multiple `<episodedetails>` blocks
+
+### DVD/Blu-ray Structure
+
+**DVD Structure:**
+```
+/Movies/
+  Movie Name (Year)/
+    VIDEO_TS/
+      VIDEO_TS.nfo              # NFO at VIDEO_TS level
+      VIDEO_TS.IFO
+      VTS_01_0.IFO
+      VTS_01_1.VOB
+```
+
+**Blu-ray Structure:**
+```
+/Movies/
+  Movie Name (Year)/
+    BDMV/
+      index.bdmv
+      MovieObject.bdmv
+      STREAM/
+        00000.m2ts
+```
+
+**Note:** DVD/Blu-ray structures are detected automatically. NFO files are placed at appropriate locations (`VIDEO_TS/VIDEO_TS.nfo` for DVDs).
+
 ## v1.0 Implementation Plan
 
 All features listed below are required for v1.0 release. Each phase includes comprehensive unit testing to ensure reliability and Jellyfin compatibility.
@@ -1285,12 +1392,14 @@ All features listed below are required for v1.0 release. Each phase includes com
   - [ ] User marks files to adopt vs skip
   - [ ] **Unit tests:** File role detection, user confirmation flow (mocked)
 - [ ] **Step 3: Jellyfin structure planning**
-  - [ ] Generate `Movie Name (Year)/` folder name
-  - [ ] Optional provider ID injection: `[imdbid-tt1234567]`
-  - [ ] Sanitize filename (reserved characters)
-  - [ ] Determine NFO path (movie.nfo vs filename.nfo based on folder type)
-  - [ ] Plan extras subdirectory if needed
-  - [ ] **Unit tests:** Folder name generation, provider ID injection, sanitization
+  - [ ] Generate canonical folder structure (see "Target Jellyfin Structure" above):
+    - Folder: `Movie Name (Year)/` or `Movie Name (Year) [imdbid-tt1234567]/`
+    - Main file: `Movie Name (Year).ext` (preserves source extension)
+    - NFO file: `movie.nfo` (always, per Jellyfin standard)
+    - Extras: `extras/behindthescenes/`, `extras/deleted/`, etc. if present
+  - [ ] Sanitize all filenames (reserved characters, path length validation)
+  - [ ] Detect DVD/Blu-ray structures and plan appropriate NFO placement
+  - [ ] **Unit tests:** Folder name generation, provider ID injection, sanitization, extras organization
 - [ ] **Step 4: Final plan review**
   - [ ] Display complete action plan (directories, file moves, NFO files)
   - [ ] Highlight conflicts/overwrites
@@ -1343,13 +1452,16 @@ All features listed below are required for v1.0 release. Each phase includes com
   - [ ] Batch confirmation for high-confidence matches
   - [ ] **Unit tests:** Episode matching algorithm, multi-episode detection, confidence scoring, sample detection
 - [ ] **Step 4: Jellyfin structure planning**
-  - [ ] Generate `Show Name (Year)/` series folder
-  - [ ] Generate `Season 01/`, `Season 02/` subfolders (zero-padded, no "S01" abbreviation)
-  - [ ] Generate episode filenames: `Show Name S01E01 Episode Title.ext`
-  - [ ] Sanitize all filenames
-  - [ ] Optional provider ID injection in series folder name
-  - [ ] Plan tvshow.nfo + all episode NFO files
-  - [ ] **Unit tests:** Folder structure generation, filename generation, sanitization
+  - [ ] Generate canonical folder structure (see "Target Jellyfin Structure" above):
+    - Series folder: `Show Name/` or `Show Name [tvdbid-123456]/`
+    - Season folders: `Season 01/`, `Season 02/` (zero-padded, full word "Season", not "S01")
+    - Episode files: `Show Name - S01E01 - Episode Title.ext` (dashes for separation)
+    - Episode NFOs: `Show Name - S01E01.nfo` (matches episode filename without extension)
+    - Series NFO: `tvshow.nfo` at series root
+  - [ ] Handle Season 00 for specials/OVAs
+  - [ ] Handle multi-episode files: `Show Name - S01E01-E02 - Episode Titles.ext`
+  - [ ] Sanitize all filenames (reserved characters, path length validation)
+  - [ ] **Unit tests:** Folder structure generation, filename generation, Season 00 handling, sanitization
 - [ ] **Step 5: Final plan review**
   - [ ] Display complete action plan (directories, file moves grouped by season, NFO files)
   - [ ] Highlight conflicts/overwrites
