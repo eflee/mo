@@ -1163,43 +1163,43 @@ All features listed below are required for v1.0 release. Each phase includes com
   - [x] Flag files for user confirmation
   - [x] **Unit tests:** Sample detection, false positive avoidance
 
-### Phase 3: Metadata Provider Integration
+### Phase 3: Metadata Provider Integration ✅
 **Goal:** Integrate TMDB, TheTVDB, and OMDb APIs with caching and error handling.
 
-- [ ] **TMDB integration**
-  - [ ] API client with access token authentication
-  - [ ] Movie search by title/year with pagination
-  - [ ] TV show search by title/year
-  - [ ] Episode metadata retrieval (season/episode)
-  - [ ] Cast, crew, ratings, and genre data
-  - [ ] Collection information for movies
-  - [ ] Rate limiting and retry logic
-  - [ ] **Unit tests:** API client (mocked), search parsing, error handling, rate limiting
-- [ ] **TheTVDB integration**
-  - [ ] v4 API client with JWT authentication
-  - [ ] TV show search with multiple result handling
-  - [ ] Season and episode data retrieval
-  - [ ] Episode runtime information
-  - [ ] Air dates and special episode metadata
-  - [ ] Rate limiting and retry logic
-  - [ ] **Unit tests:** API client (mocked), authentication, search/episode retrieval, error handling
-- [ ] **OMDb integration**
-  - [ ] API client with key authentication
-  - [ ] Movie metadata as supplementary/fallback source
-  - [ ] IMDb rating integration
-  - [ ] Rate limiting (1000 calls/day free tier)
-  - [ ] **Unit tests:** API client (mocked), fallback logic, rate limiting
-- [ ] **Metadata caching**
-  - [ ] Local cache for API responses (TTL-based)
-  - [ ] Reduce redundant API calls during interactive sessions
-  - [ ] **Unit tests:** Cache hit/miss, TTL expiration, cache invalidation
-- [ ] **Interactive search interface**
-  - [ ] Display search results (title, year, plot summary, ratings)
-  - [ ] Numbered selection menu
-  - [ ] Option to enter new search term
-  - [ ] Loop until user confirms match
-  - [ ] Fuzzy matching and relevance scoring
-  - [ ] **Unit tests:** Result display formatting, user input handling (mocked)
+- [x] **TMDB integration**
+  - [x] API client with access token authentication
+  - [x] Movie search by title/year with pagination
+  - [x] TV show search by title/year
+  - [x] Episode metadata retrieval (season/episode)
+  - [x] Cast, crew, ratings, and genre data
+  - [x] Collection information for movies
+  - [x] Rate limiting and retry logic
+  - [x] **Unit tests:** API client (mocked), search parsing, error handling, rate limiting
+- [x] **TheTVDB integration**
+  - [x] v4 API client with JWT authentication
+  - [x] TV show search with multiple result handling
+  - [x] Season and episode data retrieval
+  - [x] Episode runtime information
+  - [x] Air dates and special episode metadata
+  - [x] Rate limiting and retry logic
+  - [x] **Unit tests:** API client (mocked), authentication, search/episode retrieval, error handling
+- [x] **OMDb integration**
+  - [x] API client with key authentication
+  - [x] Movie metadata as supplementary/fallback source
+  - [x] IMDb rating integration
+  - [x] Rate limiting (1000 calls/day free tier)
+  - [x] **Unit tests:** API client (mocked), fallback logic, rate limiting
+- [x] **Metadata caching**
+  - [x] Local cache for API responses (TTL-based)
+  - [x] Reduce redundant API calls during interactive sessions
+  - [x] **Unit tests:** Cache hit/miss, TTL expiration, cache invalidation
+- [x] **Interactive search interface**
+  - [x] Display search results (title, year, plot summary, ratings)
+  - [x] Numbered selection menu
+  - [x] Option to enter new search term
+  - [x] Loop until user confirms match
+  - [x] Fuzzy matching and relevance scoring
+  - [x] **Unit tests:** Result display formatting, user input handling (mocked)
 
 ### Phase 4: File Analysis and Media Detection
 **Goal:** Scan directories, identify media files, and extract metadata (duration, codecs).
