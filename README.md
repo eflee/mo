@@ -36,18 +36,132 @@ For unstructured TV shows, mo.py uses:
 - **Duration-based matching** - Compares file lengths with authoritative episode runtimes from metadata providers
 - **Confidence scoring** - Presents match confidence to help you verify correctness
 
-The tool is fundamentally designed to **import directories of loosely structured media** and **move them into Jellyfin-compatible directory formats** with populated NFO metadata.
+The tool is fundamentally designed to **import directories of loosely structured media** and **move them into Jellyfin-compatible directory formats** with populated NFO metadata in specifically declared libraries of type Movie or Show depending on the type of metadata. 
 
 ## Key Features
 
-- **Interactive metadata search**: Point mo at a directory and adopt that directory into a library by interactively searching for the correct movie or TV show.
-- **Intelligent file matching**: Uses filename patterns and media file duration to match episodes with files
-- **Jellyfin-compatible output**: Creates proper folder structures and file naming conventions
+- **Interactive metadata search**: Point mo at a directory and adopt that directory into a library by interactively searching for the correct movie or TV show via online metadata sources.
+- **Intelligent and Interactive file matching**: Uses filename patterns and media file duration to match episodes with files before displaying the filematch to the user for correction and confirmation. 
+- **Jellyfin-compatible output**: Creates proper folder structures and file naming conventions and moves/copies the files into the folders
 - **NFO metadata generation**: Writes complete NFO files with metadata from online sources
 - **Handles edge cases**: Interactive prompts help you deal with bonus content, extras, and mismatched files
-- **Partial TV seasons**: Works with incomplete TV show collections
 
-## How It Works
+
+## Usage and Commands
+
+mo.py is organized around a set of commands and subcommands, similar to git.
+
+### Library Management
+
+Libraries are destination repositories where adopted media files are organized. Each library has three components:
+- **Name**: A unique identifier for the library
+- **Type**: Either `movie` or `show`
+- **Root Directory**: The filesystem path where media will be organized
+
+```bash
+# Add a new library with name, type, and root directory
+mo.py library add <library_name> <movie|show> <root_directory>
+
+# Remove a library from config (not the files themselves)
+mo.py library remove <library_name>
+
+# Show library information
+mo.py library info <library_name>
+
+# Show all configured libraries
+mo.py library list
+```
+
+### Adopting Media
+
+The `adopt` command processes media files from a source directory and integrates them into a configured library with proper Jellyfin structure and metadata. mo.py will analyze the input directory and transform the file structure into an orgnized output and integrate it into the selected library. The command behavior varies based on the media type:
+
+#### `adopt movie [directory] --library [library_name]`
+**Input:** Accepts any of the following:
+- A single media file (e.g., `Inception.mkv`)
+- A directory containing a single movie (may include extras, subtitles, etc.)
+- A Jellyfin-compatible movie folder (will re-import/update metadata)
+- Library - mo.py defaults to the configured library for a given type if it is configured. If more than one library is configured for a given type, you must manually specify. 
+
+**Output:** Jellyfin-compatible movie folder with NFO metadata.
+
+Uses current directory if `[directory]` is not specified.
+
+#### `adopt show [directory] --library [library_name]`
+**Input:** Accepts a directory storing all or part of a TV show in any structure:
+- **Already Jellyfin-compatible** (will re-import/update metadata)
+- **Structured with subdirectories** (e.g., `Season 01/`, `Season 02/`)
+- **Structured with filename prefixes** (e.g., `S01E01`, `S02E03`)
+- **Mixed or no organization** - mo.py will attempt to identify seasons and episodes
+- **Library** - mo.py defaults to the configured library for a given type if it is configured. If more than one library is configured for a given type, you must manually specify. 
+
+mo.py intelligently assigns individual media files as episodes using:
+- **Filename hints**: Parses season/episode patterns (S##E##, date-based, absolute numbering)
+- **Duration-based matching**: Compares file length with authoritative episode runtime from metadata providers
+- **Confidence scoring**: Presents match confidence for your verification
+
+**Output:** Jellyfin-compatible series folder with tvshow.nfo and per-episode NFO files.
+
+Uses current directory if `[directory]` is not specified.
+
+#### `adopt show --season <n> [directory] --library [library_name]`
+- **Input:** A directory storing all or part of a specific season (number provided as `<n>`). Can be structured or unstructured.
+- **Season** - to adopt an individual seasons of a specific show, you manually supply the season number
+- **Library** - mo.py defaults to the configured library for a given type if it is configured. If more than one library is configured for a given type, you must manually specify. 
+
+**Output:** Season subfolder within series structure with episode NFO files.
+
+This is essentially a partial operation of adopting an entire show, scoped to a single season.
+
+Uses current directory if `[directory]` is not specified.
+
+#### Global Flags
+
+mo.py supports the following global flags for all commands:
+
+- **`--verbose` / `-v`**: Enable verbose output for detailed logging
+- **`--dry-run`**: Preview actions without making any changes (shows what would be done)
+- **`--preserve` / `-p`**: Preserve original files by copying instead of moving
+  - Default behavior: Files are **moved** from source to library
+  - With `--preserve`: Files are **copied**, leaving originals intact
+  - Action log records the operation mode used
+
+#### Safety and Confirmation
+
+- **Always prompts before overwriting** unless `--force` flag is provided
+- **Shows action plan**: `mo.py adopt` always outputs the complete set of actions it will take and confirms with the user before proceeding
+- **Operation mode**: By default, files are moved. Use `--preserve` to copy instead
+
+**Examples:**
+
+```bash
+# Add a movies library
+mo.py library add MyMovies movie ~/movies/
+
+# Adopt a movie from current directory (interactive search and confirmation)
+cd /downloads/Inception.2010
+mo.py adopt movie
+
+# Adopt a TV show from specified directory
+mo.py adopt show /downloads/Breaking.Bad/
+
+# Adopt only season 2 of a show
+mo.py adopt show --season 2 /downloads/The.Wire.Season.2 --library partial_library
+
+# Force adoption without prompting (use with caution)
+mo.py adopt movie --force /downloads/SomeMovie/
+
+# Preserve original files (copy instead of move)
+mo.py --preserve adopt movie /downloads/Inception.2010
+
+# Combine flags: verbose output and preserve mode
+mo.py -v --preserve adopt show /downloads/Breaking.Bad/
+
+# Dry run to preview actions without making changes
+mo.py --dry-run adopt movie /downloads/SomeMovie/
+```
+
+## Workflows
 
 mo.py uses an **interactive, multi-step workflow** where you confirm each decision before any files are modified. At the end, you review and approve the complete action plan before execution.
 
@@ -55,7 +169,7 @@ mo.py uses an **interactive, multi-step workflow** where you confirm each decisi
 
 **Step 1: Metadata Search**
 - mo.py analyzes the filename/folder name and searches metadata providers
-- Displays search results with title, year, and plot summary
+- Displays search results with title, year, and plot summary and other key details like duration, etc...
 - You select the correct match OR provide a new search term
 - Repeat until you confirm the correct movie
 
@@ -73,9 +187,9 @@ mo.py uses an **interactive, multi-step workflow** where you confirm each decisi
   - Directory structure to be created
   - All file moves and renames
   - NFO files to be generated
-  - Any conflicts/overwrites (requires explicit confirmation)
+  - Any conflicts/overwrites (each requires explicit confirmation)
 - You approve or cancel the entire operation
-- If approved, all actions are executed and logged
+- If approved, all actions are executed and a local log is created so you can see exactly what was done. 
 
 **Result:**
 ```
@@ -90,7 +204,7 @@ Movie Name (Year)/
 
 **Step 1: Show Metadata Search**
 - mo.py analyzes the folder name and searches metadata providers
-- Displays search results with title, year, and summary
+- Displays search results with title, year, and summary and extra info like number of seasons, episodes per season, etc...
 - You select the correct match OR provide a new search term
 - Repeat until you confirm the correct show
 
@@ -106,8 +220,8 @@ Movie Name (Year)/
 **Step 3: Episode Matching (per season)**
 - mo.py analyzes each season's files using:
   - Filename patterns (S##E## notation)
-  - Media file duration compared to episode runtime
-  - Confidence scoring
+  - Media file duration is compared to episode runtimes from metadata (if available)
+  - Confidence scoring us ised to perform a fuzzy match against episodes 
 - Displays proposed matches for the season:
   - File → Episode mapping with confidence level
   - Episode title, number, and air date
@@ -115,16 +229,16 @@ Movie Name (Year)/
   - Accept all matches
   - Override individual matches
   - Manually map ambiguous files
-  - Mark extraneous files to leave behind (extras, samples, etc.)
+  - Mark extraneous files to leave behind or handle as extras (extras, samples, etc.)
 
 **Step 4: Final Plan Review**
 - mo.py presents a compact action plan showing:
   - Directory structure to be created
   - All file moves and renames (grouped by season)
   - NFO files to be generated (series + all episodes)
-  - Any conflicts/overwrites (requires explicit confirmation)
+  - Any conflicts/overwrites (each requires explicit confirmation)
 - You approve or cancel the entire operation
-- If approved, all actions are executed and logged
+- If approved, all actions are executed and a local log is created so you can see exactly what was done.
 
 **Result:**
 ```
@@ -155,7 +269,7 @@ Every adoption operation:
 
 ## Jellyfin Compatibility (Output Format)
 
-mo.py **produces** Jellyfin-compatible output, regardless of the input structure. The tool transforms whatever you provide into the strict format Jellyfin expects.
+mo.py **produces** Jellyfin-compatible output, regardless of the input structure. The tool transforms whatever you provide into a strict format Jellyfin expects based on their documentation.
 
 ### Folder Structure (Output)
 
@@ -165,15 +279,149 @@ mo.py **generates** folder structures following Jellyfin's naming conventions ([
 - Format: `Movie Name (Year)/Movie Name (Year).ext`
 - Optional: External IDs like `[imdbid-tt1234567]` or `[tmdbid-12345]`
 - Each movie in its own folder with matching filename
+- NFO file is included for verbosity and completeness
 
 **TV Shows:**
 - Series: `Show Name (Year)/`
 - Seasons: `Season 01/`, `Season 02/` (zero-padded, no abbreviations like "S01")
 - Episodes: `Show Name S01E01 Episode Title.ext`
+- NFO files included:
+  - Per Shows:  tvshow.nfo
+  - Per Season: season.nfo
+  - Per Episode: <filename of the episode>.nfo
+
+### Additional Jellyfin Compatibility Notes
+
+Based on analysis of the Jellyfin source code, the following additional requirements ensure full compatibility:
+
+#### Episode Filename Parsing
+
+Jellyfin uses complex regex patterns to parse episode information from filenames. Key patterns mo.py supports:
+
+- Standard: `S##E##` (e.g., `S01E01`, `S04E11`)
+- Alternate: `s##x##` (e.g., `s01x01`)
+- Multi-episode: `S01E01-E02-E03` or `S01E01xE02xE03` or `S01E01-02`
+- Date-based: For shows organized by air date
+- Absolute numbering: For anime (e.g., `Show Name 001.mkv`)
+
+**Important parsing rules from Jellyfin:**
+- Seasons 200-1927 and >2500 are invalidated to avoid false positives (e.g., `1920x1080` resolution)
+- Series names extracted from filenames are trimmed of `_`, `.`, and `-` characters
+- Multi-episode files can use formats like `02x03-04-15` or `S01E23-E24-E26`
+- Ending episode numbers are validated to avoid false matches with resolution specs (e.g., `1080p`)
+
+#### Season Folder Recognition
+
+Jellyfin recognizes season folders by:
+- Exact match: `Season ##` (with optional leading zeros)
+- Not abbreviated: `S01` is NOT recognized as a season folder
+- Special handling: Season 0 for specials
+- If a folder contains episode files with season numbers, it's treated as episodes, not a season folder
+
+#### NFO File Location Priority
+
+For movies, Jellyfin checks NFO files in this order:
+1. `VIDEO_TS/VIDEO_TS.nfo` (for DVD structures)
+2. `movie.nfo` (in movie folder, only for Movie type items)
+3. `<foldername>.nfo` (for DVD/BluRay folders)
+4. `<filename>.nfo` (same name as video file)
+
+For episodes:
+- Only `<filename>.nfo` (must match episode file exactly)
+
+For series:
+- Only `tvshow.nfo` in series root directory
+
+#### Multi-Episode File Support
+
+Jellyfin supports multiple `<episodedetails>` blocks in a single NFO file for multi-episode files:
+- Each episode gets its own `<episodedetails>` block
+- Episode names, overviews, and original titles are concatenated with ` / ` separator
+- `IndexNumberEnd` is set to the highest episode number
+
+#### Provider ID Formats
+
+Jellyfin accepts provider IDs in multiple formats:
+- Modern: `<uniqueid type="imdb">tt1234567</uniqueid>`
+- Legacy: `<imdb>tt1234567</imdb>` or `<imdbid>tt1234567</imdbid>`
+- Aliases: `tmdbid`, `tvdbid`, `imdb_id`, `tmdbcol`, `tmdbcolid`, `collectionnumber`
+- Attribute format: `<id IMDB="tt1234567" TMDB="12345">content</id>`
+
+mo.py should write modern `uniqueid` format but be aware of legacy formats for migration.
+
+#### Special Episode Handling
+
+Season 0 (Specials) episodes require additional metadata:
+- Use `airsafter_season`, `airsbefore_season`, `airsbefore_episode` to specify placement
+- `displayseason` and `displayepisode` override the display numbering
+- These fields help Jellyfin correctly order specials relative to regular episodes
+
+#### Path-Based Provider ID Detection
+
+Jellyfin can extract provider IDs directly from folder and filenames using bracket notation. mo.py should optionally support this format:
+
+**Supported Provider IDs in Paths:**
+- Movies: `[imdbid-tt1234567]`, `[tmdbid-12345]`
+- TV Shows: `[imdbid-tt...]`, `[tvdbid-...]`, `[tmdbid-...]`, `[anidbid-...]`, `[anilistid-...]`, `[anisearchid-...]`
+
+**Examples:**
+- `Inception (2010) [imdbid-tt1627792]/Inception (2010).mkv`
+- `Breaking Bad (2008) [tvdbid-81189]/tvshow.nfo`
+
+This metadata is extracted using `GetAttributeValue()` during library scanning, so including provider IDs in paths provides a fallback if NFO files are missing or incomplete.
+
+#### Content Type Detection
+
+Jellyfin uses several methods to distinguish between movies and TV shows:
+
+**Series Detection:**
+- Presence of `tvshow.nfo` in root directory
+- Presence of season folders matching `Season ##` pattern
+- Presence of episode files with season/episode numbers (S##E##)
+- Provider IDs in folder name (imdbid, tvdbid, etc.)
+
+**Movie Detection:**
+- Absence of `tvshow.nfo`
+- DVD/BluRay folder structure (`VIDEO_TS/`, `BDMV/`)
+- Single video file or mixed folder with multiple videos
+- Provider IDs in folder/filename (imdbid, tmdbid)
+
+**Sample File Filtering:**
+- Files matching regex `\bsample\b` (case-insensitive) are ignored
+- mo.py should warn users about sample files and offer to skip them
+
+#### Mixed vs Dedicated Folder Logic
+
+Jellyfin's behavior changes based on folder structure:
+
+**Dedicated Movie Folder:**
+- Single video file in its own folder
+- Movie name uses folder name
+- NFO can be `movie.nfo` in folder
+
+**Mixed Folder:**
+- Multiple video files in same directory
+- Each movie name uses filename (not folder name)
+- NFO must be `<filename>.nfo` (not `movie.nfo`)
+- mo.py defaults to dedicated folders for better organization
+
+#### Episode Resolution Context
+
+Jellyfin resolves episodes within a parent context:
+
+**Episode Parent Priority:**
+1. If within a `Season ##/` folder → use that season number
+2. If directly under series folder → attempt to parse season from filename
+3. If season cannot be determined → **default to Season 1**
+
+**mo.py Implications:**
+- Always organize episodes into explicit `Season ##/` folders to avoid ambiguity
+- Never rely on filename-only season detection
+- Warn users if episodes lack clear season information
 
 ### NFO Files
 
-mo.py generates Kodi/Jellyfin-compatible NFO files ([NFO Documentation](https://jellyfin.org/docs/general/server/metadata/nfo/)) containing:
+As stated above, mo.py generates Kodi/Jellyfin-compatible NFO files ([NFO Documentation](https://jellyfin.org/docs/general/server/metadata/nfo/)) containing:
 
 **Common Fields:**
 - `title` / `name`: Title of the media
@@ -224,8 +472,7 @@ mo.py generates Kodi/Jellyfin-compatible NFO files ([NFO Documentation](https://
 - Movies: `movie.nfo` (in movie folder) OR `<filename>.nfo` (same name as video file)
 - TV Shows: `tvshow.nfo` (in series root folder)
 - Episodes: `<episode_filename>.nfo` (same name as episode file)
-- Seasons: `season.nfo` (optional, in season folder)
-- VIDEO_TS: `VIDEO_TS.nfo` (for DVD folders)
+- Seasons: `season.nfo` (in season folder)
 
 ### Metadata Sources
 
@@ -246,118 +493,11 @@ mo.py retrieves metadata from the following online sources:
   - Requires simple registration for API key
   - Rate limits can be removed with optional donation
 
-## Commands
-
-mo.py is organized around a set of commands and subcommands, similar to git.
-
-### Library Management
-
-Libraries are destination repositories where adopted media files are organized. Each library has three components:
-- **Name**: A unique identifier for the library
-- **Type**: Either `movie` or `show`
-- **Root Directory**: The filesystem path where media will be organized
-
-```bash
-# Add a new library with name, type, and root directory
-mo.py library add <library_name> <movie|show> <root_directory>
-
-# Remove a library
-mo.py library remove <library_name>
-
-# Show library information
-mo.py library info <library_name>
-```
-
-### Adopting Media
-
-The `adopt` command processes media files from a source directory and integrates them into a configured library with proper Jellyfin structure and metadata. **Input can be in any structure** - mo.py will analyze and transform it. The command behavior varies based on the media type:
-
-#### `adopt movie [directory]`
-**Input:** Accepts any of the following:
-- A single media file (e.g., `Inception.mkv`)
-- A directory containing a single movie (may include extras, subtitles, etc.)
-- A Jellyfin-compatible movie folder (will re-import/update metadata)
-
-**Output:** Jellyfin-compatible movie folder with NFO metadata.
-
-Uses current directory if `[directory]` is not specified.
-
-#### `adopt show [directory]`
-**Input:** Accepts a directory storing all or part of a TV show in any structure:
-- **Already Jellyfin-compatible** (will re-import/update metadata)
-- **Structured with subdirectories** (e.g., `Season 01/`, `Season 02/`)
-- **Structured with filename prefixes** (e.g., `S01E01`, `S02E03`)
-- **Mixed or no organization** - mo.py will attempt to identify seasons and episodes
-
-mo.py intelligently assigns individual media files as episodes using:
-- **Filename hints**: Parses season/episode patterns (S##E##, date-based, absolute numbering)
-- **Duration-based matching**: Compares file length with authoritative episode runtime from metadata providers
-- **Confidence scoring**: Presents match confidence for your verification
-
-**Output:** Jellyfin-compatible series folder with tvshow.nfo and per-episode NFO files.
-
-Uses current directory if `[directory]` is not specified.
-
-#### `adopt show --season <n> [directory]`
-**Input:** A directory storing all or part of a specific season (number provided as `<n>`). Can be structured or unstructured.
-
-**Output:** Season subfolder within series structure with episode NFO files.
-
-This is essentially a partial operation of adopting an entire show, scoped to a single season.
-
-Uses current directory if `[directory]` is not specified.
-
-#### Global Flags
-
-mo.py supports the following global flags for all commands:
-
-- **`--verbose` / `-v`**: Enable verbose output for detailed logging
-- **`--dry-run`**: Preview actions without making any changes (shows what would be done)
-- **`--preserve` / `-p`**: Preserve original files by copying instead of moving
-  - Default behavior: Files are **moved** from source to library
-  - With `--preserve`: Files are **copied**, leaving originals intact
-  - Action log records the operation mode used
-
-#### Safety and Confirmation
-
-- **Always prompts before overwriting** unless `--force` flag is provided
-- **Shows action plan**: `mo.py adopt` always outputs the complete set of actions it will take and confirms with the user before proceeding
-- **Operation mode**: By default, files are moved. Use `--preserve` to copy instead
-
-**Examples:**
-
-```bash
-# Add a movies library
-mo.py library add MyMovies movie ~/movies/
-
-# Adopt a movie from current directory (interactive search and confirmation)
-cd /downloads/Inception.2010
-mo.py adopt movie
-
-# Adopt a TV show from specified directory
-mo.py adopt show /downloads/Breaking.Bad/
-
-# Adopt only season 2 of a show
-mo.py adopt show --season 2 /downloads/The.Wire.Season.2
-
-# Force adoption without prompting (use with caution)
-mo.py adopt movie --force /downloads/SomeMovie/
-
-# Preserve original files (copy instead of move)
-mo.py --preserve adopt movie /downloads/Inception.2010
-
-# Combine flags: verbose output and preserve mode
-mo.py -v --preserve adopt show /downloads/Breaking.Bad/
-
-# Dry run to preview actions without making changes
-mo.py --dry-run adopt movie /downloads/SomeMovie/
-```
-
 ## Configuration
 
 mo.py uses a hierarchical configuration system:
 
-1. **Local config** (`.mo.conf` in current directory) - checked first
+1. **Local config** (`mo.conf` or `.mo.conf` in current directory) - checked first
 2. **User config** (`~/.config/mo/config` or platform-specific location) - merged with local config
 
 If neither configuration file exists, mo.py will error and prompt you to create a configuration using the `library` command.
@@ -365,6 +505,7 @@ If neither configuration file exists, mo.py will error and prompt you to create 
 ### Configuration Management
 
 ```bash
+
 # Configure metadata API keys
 mo.py config set tmdb_api_key <your_key>
 mo.py config set tvdb_api_key <your_key>
@@ -374,7 +515,8 @@ mo.py config set omdb_api_key <your_key>
 mo.py config list
 
 # Set preferences
-mo.py config set prefer_tvdb true
+mo.py config set prefer_tvdb true # uses tvdb by default
+mo.py config set default_preserve true # defaults to preserve mode
 ```
 
 The configuration file stores:
@@ -445,251 +587,9 @@ This functionality will be temporary until I have fully adopted my library into 
 The following characters cannot be used in filenames and will be sanitized:
 `< > : " / \ | ? *`
 
-## Additional Jellyfin Compatibility Notes
-
-Based on analysis of the Jellyfin source code, the following additional requirements ensure full compatibility:
-
-### Episode Filename Parsing
-
-Jellyfin uses complex regex patterns to parse episode information from filenames. Key patterns mo.py should support:
-
-- Standard: `S##E##` (e.g., `S01E01`, `S04E11`)
-- Alternate: `s##x##` (e.g., `s01x01`)
-- Multi-episode: `S01E01-E02-E03` or `S01E01xE02xE03`
-- Date-based: For shows organized by air date
-- Absolute numbering: For anime (e.g., `Show Name 001.mkv`)
-
-**Important parsing rules from Jellyfin:**
-- Seasons 200-1927 and >2500 are invalidated to avoid false positives (e.g., `1920x1080` resolution)
-- Series names extracted from filenames are trimmed of `_`, `.`, and `-` characters
-- Multi-episode files can use formats like `02x03-04-15` or `S01E23-E24-E26`
-- Ending episode numbers are validated to avoid false matches with resolution specs (e.g., `1080p`)
-
-### Season Folder Recognition
-
-Jellyfin recognizes season folders by:
-- Exact match: `Season ##` (with optional leading zeros)
-- Not abbreviated: `S01` is NOT recognized as a season folder
-- Special handling: Season 0 for specials
-- If a folder contains episode files with season numbers, it's treated as episodes, not a season folder
-
-### NFO File Location Priority
-
-For movies, Jellyfin checks NFO files in this order:
-1. `VIDEO_TS/VIDEO_TS.nfo` (for DVD structures)
-2. `movie.nfo` (in movie folder, only for Movie type items)
-3. `<foldername>.nfo` (for DVD/BluRay folders)
-4. `<filename>.nfo` (same name as video file)
-
-For episodes:
-- Only `<filename>.nfo` (must match episode file exactly)
-
-For series:
-- Only `tvshow.nfo` in series root directory
-
-### Multi-Episode File Support
-
-Jellyfin supports multiple `<episodedetails>` blocks in a single NFO file for multi-episode files:
-- Each episode gets its own `<episodedetails>` block
-- Episode names, overviews, and original titles are concatenated with ` / ` separator
-- `IndexNumberEnd` is set to the highest episode number
-
-### Provider ID Formats
-
-Jellyfin accepts provider IDs in multiple formats:
-- Modern: `<uniqueid type="imdb">tt1234567</uniqueid>`
-- Legacy: `<imdb>tt1234567</imdb>` or `<imdbid>tt1234567</imdbid>`
-- Aliases: `tmdbid`, `tvdbid`, `imdb_id`, `tmdbcol`, `tmdbcolid`, `collectionnumber`
-- Attribute format: `<id IMDB="tt1234567" TMDB="12345">content</id>`
-
-**mo.py should write modern `uniqueid` format but be aware of legacy formats for migration.**
-
-### Special Episode Handling
-
-Season 0 (Specials) episodes require additional metadata:
-- Use `airsafter_season`, `airsbefore_season`, `airsbefore_episode` to specify placement
-- `displayseason` and `displayepisode` override the display numbering
-- These fields help Jellyfin correctly order specials relative to regular episodes
-
-### Path-Based Provider ID Detection
-
-Jellyfin can extract provider IDs directly from folder and filenames using bracket notation. mo.py should optionally support this format:
-
-**Supported Provider IDs in Paths:**
-- Movies: `[imdbid-tt1234567]`, `[tmdbid-12345]`
-- TV Shows: `[imdbid-tt...]`, `[tvdbid-...]`, `[tmdbid-...]`, `[anidbid-...]`, `[anilistid-...]`, `[anisearchid-...]`
-
-**Examples:**
-- `Inception (2010) [imdbid-tt1627792]/Inception (2010).mkv`
-- `Breaking Bad (2008) [tvdbid-81189]/tvshow.nfo`
-
-This metadata is extracted using `GetAttributeValue()` during library scanning, so including provider IDs in paths provides a fallback if NFO files are missing or incomplete.
-
-### Content Type Detection
-
-Jellyfin uses several methods to distinguish between movies and TV shows:
-
-**Series Detection:**
-- Presence of `tvshow.nfo` in root directory
-- Presence of season folders matching `Season ##` pattern
-- Presence of episode files with season/episode numbers (S##E##)
-- Provider IDs in folder name (imdbid, tvdbid, etc.)
-
-**Movie Detection:**
-- Absence of `tvshow.nfo`
-- DVD/BluRay folder structure (`VIDEO_TS/`, `BDMV/`)
-- Single video file or mixed folder with multiple videos
-- Provider IDs in folder/filename (imdbid, tmdbid)
-
-**Sample File Filtering:**
-- Files matching regex `\bsample\b` (case-insensitive) are ignored
-- mo.py should warn users about sample files and offer to skip them
-
-### Mixed vs Dedicated Folder Logic
-
-Jellyfin's behavior changes based on folder structure:
-
-**Dedicated Movie Folder:**
-- Single video file in its own folder
-- Movie name uses folder name
-- NFO can be `movie.nfo` in folder
-
-**Mixed Folder:**
-- Multiple video files in same directory
-- Each movie name uses filename (not folder name)
-- NFO must be `<filename>.nfo` (not `movie.nfo`)
-- mo.py should default to dedicated folders for better organization
-
-### Episode Resolution Context
-
-Jellyfin resolves episodes within a parent context:
-
-**Episode Parent Priority:**
-1. If within a `Season ##/` folder → use that season number
-2. If directly under series folder → attempt to parse season from filename
-3. If season cannot be determined → **default to Season 1**
-
-**mo.py Implications:**
-- Always organize episodes into explicit `Season ##/` folders to avoid ambiguity
-- Never rely on filename-only season detection
-- Warn users if episodes lack clear season information
-
 ## Development Setup & Architecture
 
 This section outlines the project structure, dependencies, development tools, and architectural decisions required before starting implementation.
-
-### Project Structure
-
-```
-mo/
-├── mo.py                      # Main entry point (CLI)
-├── README.md                  # This file
-├── LICENSE                    # License file
-├── requirements.txt           # Python dependencies
-├── requirements-dev.txt       # Development dependencies (testing, linting)
-├── setup.py                   # Package setup for installation
-├── .gitignore                 # Git ignore file
-├── pyproject.toml            # Modern Python project config (PEP 518)
-├── pytest.ini                # Pytest configuration
-├── .mo.conf.example          # Example local config file
-│
-├── mo/                       # Main package directory
-│   ├── __init__.py
-│   ├── __main__.py           # Enable `python -m mo`
-│   │
-│   ├── cli/                  # CLI interface
-│   │   ├── __init__.py
-│   │   ├── parser.py         # Argument parsing
-│   │   ├── commands.py       # Command routing and execution
-│   │   └── ui.py             # Interactive prompts, menus, progress indicators
-│   │
-│   ├── config/               # Configuration management
-│   │   ├── __init__.py
-│   │   ├── loader.py         # Hierarchical config loading
-│   │   ├── manager.py        # Config operations (get, set, list)
-│   │   └── schema.py         # Config validation schema
-│   │
-│   ├── library/              # Library management
-│   │   ├── __init__.py
-│   │   ├── manager.py        # Library add/remove/info
-│   │   └── models.py         # Library data structures
-│   │
-│   ├── providers/            # Metadata provider integrations
-│   │   ├── __init__.py
-│   │   ├── base.py           # Abstract base provider
-│   │   ├── tmdb.py           # TMDB API client
-│   │   ├── tvdb.py           # TheTVDB API client
-│   │   ├── omdb.py           # OMDb API client
-│   │   ├── cache.py          # Metadata caching layer
-│   │   └── search.py         # Unified search interface
-│   │
-│   ├── parsers/              # Filename and path parsing
-│   │   ├── __init__.py
-│   │   ├── episode.py        # Episode filename parser (Jellyfin-compatible)
-│   │   ├── season.py         # Season folder detection
-│   │   ├── movie.py          # Movie filename parser
-│   │   ├── provider_id.py    # Provider ID extraction from paths
-│   │   └── sanitize.py       # Filename sanitization
-│   │
-│   ├── media/                # Media file analysis
-│   │   ├── __init__.py
-│   │   ├── scanner.py        # Directory scanning, file detection
-│   │   ├── analyzer.py       # Media metadata extraction (ffprobe)
-│   │   └── matcher.py        # Episode matching (duration + filename)
-│   │
-│   ├── nfo/                  # NFO generation
-│   │   ├── __init__.py
-│   │   ├── builder.py        # XML builder utilities
-│   │   ├── movie.py          # Movie NFO generator
-│   │   ├── tvshow.py         # TV show NFO generator
-│   │   ├── episode.py        # Episode NFO generator
-│   │   └── templates.py      # NFO field templates
-│   │
-│   ├── workflows/            # Adoption workflows
-│   │   ├── __init__.py
-│   │   ├── base.py           # Base workflow class
-│   │   ├── movie.py          # Movie adoption workflow
-│   │   ├── tvshow.py         # TV show adoption workflow
-│   │   ├── planner.py        # Action plan generation
-│   │   └── executor.py       # File operations and logging
-│   │
-│   ├── migration/            # Proprietary format migration (temporary)
-│   │   ├── __init__.py
-│   │   ├── parser.py         # metadata.json parser
-│   │   └── converter.py      # Convert to NFO format
-│   │
-│   └── utils/                # Utilities
-│       ├── __init__.py
-│       ├── logging.py        # Logging configuration
-│       ├── validation.py     # Input validation
-│       ├── platform.py       # Platform-specific helpers
-│       └── errors.py         # Custom exception classes
-│
-└── tests/                    # Test suite
-    ├── __init__.py
-    ├── conftest.py           # Pytest fixtures
-    │
-    ├── unit/                 # Unit tests (mirror package structure)
-    │   ├── __init__.py
-    │   ├── test_config/
-    │   ├── test_parsers/
-    │   ├── test_providers/
-    │   ├── test_media/
-    │   ├── test_nfo/
-    │   └── test_utils/
-    │
-    ├── integration/          # Integration tests
-    │   ├── __init__.py
-    │   ├── test_movie_workflow.py
-    │   ├── test_tvshow_workflow.py
-    │   └── test_migration.py
-    │
-    └── fixtures/             # Test data
-        ├── configs/          # Sample config files
-        ├── media/            # Sample video files (small test files)
-        ├── nfo/              # Expected NFO outputs
-        └── responses/        # Mock API responses (JSON)
-```
 
 ### Core Dependencies
 
@@ -815,7 +715,7 @@ def add(name, type, path):
 - `pymediainfo` provides a Python API (cleaner integration)
 - `ffprobe` as fallback if mediainfo not available
 - Both extract: duration, resolution, codec, bitrate
-- Handle errors gracefully if neither is available
+- Fail tv show parsing if neither is available
 
 #### 4. HTTP Client: requests + requests-cache
 **Why:**
@@ -880,9 +780,10 @@ class MovieMetadata(BaseModel):
 - Use Python's built-in `logging` module
 - Rich handler for colored console output
 - File handler for debug logs (`~/.cache/mo/mo.log`)
-- Structured logging with context (JSON format for file logs)
+- Structured logging with context (JSON format for file workflow logs)
 - Log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
 - `--verbose` flag sets level to DEBUG
+- Console output for all file actions taken
 
 #### 9. Error Handling Philosophy
 **Principles:**
@@ -903,25 +804,6 @@ class MovieMetadata(BaseModel):
 - Syntax highlighting for plans/logs
 - Tree views for directory structures
 - Plays well with Click
-
-**Example:**
-```python
-from rich.console import Console
-from rich.table import Table
-
-console = Console()
-
-table = Table(title="Search Results")
-table.add_column("No.", style="cyan")
-table.add_column("Title", style="green")
-table.add_column("Year", style="yellow")
-table.add_column("Rating", style="magenta")
-
-for i, result in enumerate(results, 1):
-    table.add_row(str(i), result.title, str(result.year), str(result.rating))
-
-console.print(table)
-```
 
 ### Development Workflow
 
@@ -979,95 +861,6 @@ include_provider_ids_in_paths = false
 cache_ttl_hours = 24
 ```
 
-**`pyproject.toml`** (modern Python project config):
-```toml
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "mo"
-version = "1.0.0"
-description = "Media Organizer - Jellyfin-compatible media library management"
-readme = "README.md"
-requires-python = ">=3.8"
-license = {text = "MIT"}
-authors = [{name = "Your Name", email = "your.email@example.com"}]
-keywords = ["jellyfin", "media", "organizer", "nfo", "metadata"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-]
-
-[project.scripts]
-mo = "mo.__main__:main"
-
-[tool.black]
-line-length = 100
-target-version = ["py38"]
-
-[tool.isort]
-profile = "black"
-line_length = 100
-
-[tool.mypy]
-python_version = "3.8"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = "-v --strict-markers"
-markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "integration: marks tests as integration tests",
-]
-```
-
-**`.gitignore`**:
-```
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-env/
-*.egg-info/
-dist/
-build/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-*.log
-
-# Config (don't commit API keys)
-.mo.conf
-config
-
-# OS
-.DS_Store
-Thumbs.db
-```
-
 ### API Key Setup for Development
 
 **TMDB:**
@@ -1103,8 +896,9 @@ python -m mo config set omdb_api_key YOUR_KEY
    - Implementation: exponential backoff, request queuing
 
 2. **Caching Strategy:**
-   - Cache search results: 24 hours
-   - Cache episode metadata: 7 days
+   - Cache search results: 7 days
+   - Cache tv show metadata: 30 days
+   - Cache episode metadata: 30 days
    - Cache movie metadata: 30 days
    - Use `requests-cache` with SQLite backend
 
@@ -1118,24 +912,6 @@ python -m mo config set omdb_api_key YOUR_KEY
    - Stream large files (don't load into memory)
    - Process episodes one season at a time
    - Limit concurrent API requests
-
-### Security Considerations
-
-1. **API Key Storage:**
-   - Store in config files with restricted permissions (0600)
-   - Redact when displaying config (`config list`)
-   - Optionally support `.env` files
-
-2. **File Operations:**
-   - Validate all paths (prevent directory traversal)
-   - Check available disk space before operations
-   - Preserve file permissions and ownership
-   - Never follow symlinks without user confirmation
-
-3. **Input Validation:**
-   - Sanitize all user input
-   - Validate provider IDs match expected formats
-   - Reject suspiciously long paths/filenames
 
 ## v1.0 Implementation Plan
 
