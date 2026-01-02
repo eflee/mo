@@ -263,7 +263,7 @@ class TestTheTVDBEpisodeMetadata:
         assert episode.season_number == 1
         assert episode.episode_number == 1
         assert episode.title == "Pilot"
-        assert episode.air_date == "2008-01-20"
+        assert episode.aired == "2008-01-20"
         assert episode.runtime == 58
 
     def test_get_episode_not_found(self, provider, mock_episodes_response):
