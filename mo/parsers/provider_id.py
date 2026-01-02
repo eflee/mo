@@ -9,14 +9,12 @@ from typing import Dict, Optional
 
 from mo.utils.errors import ValidationError
 
-# Provider ID patterns (DRY - single source of truth)
 PROVIDER_PATTERNS = {
     "imdb": re.compile(r"\[imdbid-(tt\d+)\]", re.IGNORECASE),
     "tmdb": re.compile(r"\[tmdbid-(\d+)\]", re.IGNORECASE),
     "tvdb": re.compile(r"\[tvdbid-(\d+)\]", re.IGNORECASE),
 }
 
-# Provider ID validation patterns (DRY - compiled once)
 PROVIDER_VALIDATORS = {
     "imdb": re.compile(r"^tt\d+$"),
     "tmdb": re.compile(r"^\d+$"),
@@ -28,7 +26,6 @@ def extract_provider_ids(path: str) -> Dict[str, str]:
     """
     Extract provider IDs from a path using bracket notation.
 
-    Single Responsibility: Only extracts provider IDs from paths.
 
     Args:
         path: File or directory path containing provider IDs
@@ -57,7 +54,6 @@ def validate_provider_id(provider: str, provider_id: str) -> bool:
     """
     Validate a provider ID format.
 
-    Single Responsibility: Only validates provider ID format.
 
     Args:
         provider: Provider name ('imdb', 'tmdb', 'tvdb')
@@ -85,7 +81,6 @@ def format_provider_id(provider: str, provider_id: str) -> str:
     """
     Format a provider ID into Jellyfin bracket notation.
 
-    Single Responsibility: Only formats provider IDs.
 
     Args:
         provider: Provider name ('imdb', 'tmdb', 'tvdb')
@@ -127,7 +122,6 @@ def generate_folder_name(
     """
     Generate a Jellyfin-compatible folder name.
 
-    Single Responsibility: Only generates folder names from components.
 
     Args:
         title: Media title
@@ -179,7 +173,6 @@ def strip_provider_ids(path: str) -> str:
     """
     Remove all provider IDs from a path.
 
-    Single Responsibility: Only removes provider IDs from paths.
 
     Args:
         path: Path containing provider IDs

@@ -10,7 +10,6 @@ from typing import Dict, List, Literal, Optional
 from mo.config import Config
 from mo.utils.errors import ValidationError
 
-# Library type constants (DRY - single source of truth)
 LibraryType = Literal["movie", "show"]
 VALID_LIBRARY_TYPES = {"movie", "show"}
 
@@ -20,7 +19,6 @@ class Library:
     """
     Represents a media library.
 
-    Single Responsibility: Data structure for library information.
     """
 
     name: str
@@ -43,7 +41,6 @@ class LibraryManager:
     """
     Manages media libraries.
 
-    Single Responsibility: Handles library operations (add, remove, list, get).
     """
 
     def __init__(self, config: Config):
@@ -61,7 +58,6 @@ class LibraryManager:
         """
         Add a new library.
 
-        Single Responsibility: Only handles adding a library.
 
         Args:
             name: Library name
@@ -117,7 +113,6 @@ class LibraryManager:
         """
         Remove a library.
 
-        Single Responsibility: Only handles removing a library.
 
         Args:
             name: Library name to remove
@@ -138,7 +133,6 @@ class LibraryManager:
         """
         Get a library by name.
 
-        Single Responsibility: Only retrieves a library.
 
         Args:
             name: Library name
@@ -170,7 +164,6 @@ class LibraryManager:
         """
         List all libraries.
 
-        Single Responsibility: Only retrieves all libraries.
 
         Returns:
             List[Library]: List of all configured libraries
@@ -192,7 +185,6 @@ class LibraryManager:
         """
         Check if a library exists.
 
-        Single Responsibility: Only checks existence.
 
         Args:
             name: Library name
@@ -207,7 +199,6 @@ class LibraryManager:
         """
         Get detailed library information.
 
-        Single Responsibility: Only formats library info for display.
 
         Args:
             name: Library name

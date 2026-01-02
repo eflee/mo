@@ -18,7 +18,6 @@ from mo.config import Config
 from mo.library import LibraryManager
 from mo.utils.errors import ConfigError, MoError
 
-# Global console for rich output (DRY - single instance)
 console = Console()
 
 
@@ -26,7 +25,6 @@ def get_config() -> Optional[Config]:
     """
     Get configuration instance with error handling.
 
-    Single Responsibility: Only handles config loading.
 
     Returns:
         Config | None: Config instance or None if error
@@ -277,7 +275,6 @@ def list_config(section: Optional[str]):
         sys.exit(1)
 
     try:
-        # Sensitive keys to redact (DRY - single source of truth)
         SENSITIVE_KEYS = {"api_key", "password", "token", "secret"}
 
         if section:
