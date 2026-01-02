@@ -4,6 +4,7 @@ Implements the TMDB API v3 for movie and TV show metadata retrieval.
 Requires an API access token from https://www.themoviedb.org/settings/api
 """
 
+import logging
 import time
 from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
@@ -21,6 +22,8 @@ from mo.providers.base import (
     TVShowMetadata,
 )
 from mo.providers.cache import get_cache
+
+logger = logging.getLogger(__name__)
 
 
 class TMDBProvider:
@@ -123,28 +126,41 @@ class TMDBProvider:
                 response = self.session.get(url, headers=self._get_headers(), params=params)
 
                 if response.status_code == 200:
+                    logger.debug(f"TMDB request successful: {endpoint}")
                     return response.json()
                 elif response.status_code == 404:
+                    logger.warning(f"TMDB resource not found: {endpoint}")
                     raise NotFoundError(f"Resource not found: {endpoint}")
                 elif response.status_code == 401:
+                    logger.error("Invalid TMDB access token")
                     raise AuthenticationError("Invalid TMDB access token")
                 elif response.status_code == 429:
                     # Rate limit exceeded
                     retry_after = int(response.headers.get("Retry-After", 60))
                     if attempt < retry_count - 1:
+                        logger.warning(f"TMDB rate limit hit, retrying after {retry_after}s (attempt {attempt+1}/{retry_count})")
                         time.sleep(retry_after)
                         continue
+                    logger.error(f"TMDB rate limit exceeded after {retry_count} attempts")
                     raise RateLimitError(
                         "TMDB rate limit exceeded", retry_after=retry_after
                     )
                 else:
+                    try:
+                        error_msg = str(response.text)[:100]
+                    except (TypeError, AttributeError):
+                        error_msg = str(response)[:100]
+                    logger.error(f"TMDB API error {response.status_code}: {error_msg}")
                     response.raise_for_status()
 
             except requests.RequestException as e:
                 if attempt == retry_count - 1:
+                    logger.error(f"TMDB API request failed after {retry_count} attempts: {e}")
                     raise ProviderError(f"TMDB API request failed: {e}")
+                logger.debug(f"TMDB request attempt {attempt+1} failed, retrying...")
                 time.sleep(2 ** attempt)  # Exponential backoff
 
+        logger.error("TMDB API request failed after retries")
         raise ProviderError("TMDB API request failed after retries")
 
     def search_movie(
