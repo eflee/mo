@@ -1,6 +1,6 @@
 """TV show and episode NFO generation for Jellyfin."""
 
-from typing import Optional
+from typing import List
 
 from mo.nfo.builder import NFOBuilder
 from mo.providers.base import EpisodeMetadata, TVShowMetadata
@@ -128,13 +128,11 @@ class EpisodeNFOGenerator:
     def generate(
         self,
         metadata: EpisodeMetadata,
-        multi_episode: bool = False,
     ) -> str:
         """Generate an episode NFO from metadata.
 
         Args:
             metadata: Episode metadata from provider
-            multi_episode: If True, wraps in multiple episodedetails blocks
 
         Returns:
             str: XML string for the episode NFO file
@@ -237,7 +235,7 @@ class EpisodeNFOGenerator:
 
         return builder.to_string()
 
-    def generate_multi_episode(self, episodes: list[EpisodeMetadata]) -> str:
+    def generate_multi_episode(self, episodes: List[EpisodeMetadata]) -> str:
         """Generate a multi-episode NFO file.
 
         Args:
@@ -250,7 +248,7 @@ class EpisodeNFOGenerator:
         # This is handled by concatenating multiple NFO outputs
         nfo_parts = []
         for episode in episodes:
-            nfo_parts.append(self.generate(episode, multi_episode=True))
+            nfo_parts.append(self.generate(episode))
 
         # Join with newline
         return '\n'.join(nfo_parts)
@@ -272,7 +270,7 @@ class EpisodeNFOGenerator:
 
     def generate_multi_episode_to_file(
         self,
-        episodes: list[EpisodeMetadata],
+        episodes: List[EpisodeMetadata],
         filepath: str,
     ) -> None:
         """Generate a multi-episode NFO and write it to a file.

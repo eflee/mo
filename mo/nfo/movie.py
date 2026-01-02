@@ -1,7 +1,5 @@
 """Movie NFO generation for Jellyfin."""
 
-from typing import Optional
-
 from mo.nfo.builder import NFOBuilder
 from mo.providers.base import MovieMetadata
 

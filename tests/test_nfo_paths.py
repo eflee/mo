@@ -3,8 +3,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from mo.media.scanner import ContentType
 from mo.nfo.paths import NFOPathResolver
 

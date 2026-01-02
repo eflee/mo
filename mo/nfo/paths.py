@@ -1,7 +1,6 @@
 """NFO file path determination logic for Jellyfin."""
 
 from pathlib import Path
-from typing import Optional
 
 from mo.media.scanner import ContentType
 

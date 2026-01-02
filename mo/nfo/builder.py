@@ -1,7 +1,7 @@
 """XML builder for NFO files with proper encoding and formatting."""
 
 import xml.etree.ElementTree as ET
-from typing import Any, Optional
+from typing import Any, List, Optional
 from xml.dom import minidom
 
 
@@ -47,9 +47,9 @@ class NFOBuilder:
     def add_elements(
         self,
         tag: str,
-        values: list,
+        values: List,
         parent: Optional[ET.Element] = None,
-    ) -> list[ET.Element]:
+    ) -> List[ET.Element]:
         """Add multiple elements with the same tag.
 
         Args:
