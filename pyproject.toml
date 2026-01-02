@@ -9,7 +9,7 @@ description = "Media Organizer - Jellyfin-compatible media library management"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
-authors = [{name = "Eric Flee", email = "eric@ericflee.com"}]
+authors = [{name = "Eli Flesher", email = "eli@flesher.io"}]
 keywords = ["jellyfin", "media", "organizer", "nfo", "metadata"]
 classifiers = [
     "Development Status :: 4 - Beta",
