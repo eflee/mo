@@ -17,9 +17,9 @@ from mo.config import Config
 from mo.library import LibraryManager, Library
 from mo.media.scanner import MediaScanner
 from mo.media.metadata import MediaMetadataExtractor
-from mo.media.matcher import DurationMatcher, MatchConfidence
+from mo.media.matcher import MatchConfidence
 from mo.nfo.tv import TVShowNFOGenerator, EpisodeNFOGenerator
-from mo.parsers.episode import parse_episode_filename, extract_all_episode_numbers
+from mo.parsers.episode import parse_episode_filename
 from mo.parsers.season import format_season_folder_name, detect_season_from_path
 from mo.parsers.sanitize import sanitize_filename
 from mo.providers.base import SearchResult, TVShowMetadata, EpisodeMetadata, ProviderError
@@ -27,6 +27,10 @@ from mo.providers.search import InteractiveSearch
 from mo.providers.tmdb import TMDBProvider
 from mo.providers.tvdb import TheTVDBProvider
 from mo.utils.errors import MoError
+
+
+# Constants
+EXTRA_EPISODES_BUFFER = 10  # Number of extra episodes to fetch beyond expected count
 
 
 @dataclass
@@ -128,7 +132,6 @@ class TVShowAdoptionWorkflow:
         self.tvshow_nfo_generator = TVShowNFOGenerator()
         self.episode_nfo_generator = EpisodeNFOGenerator()
         self.metadata_extractor = MediaMetadataExtractor()
-        self.duration_matcher = DurationMatcher()
 
         # Initialize TMDB provider
         tmdb_api_key = config.get("metadata", "tmdb_api_key")
@@ -139,7 +142,8 @@ class TVShowAdoptionWorkflow:
             )
         self.tmdb = TMDBProvider(access_token=tmdb_api_key)
 
-        # Initialize TheTVDB provider if configured
+        # Initialize TheTVDB provider if configured (for future use as fallback/supplement to TMDB)
+        # Currently not used in workflow, but available for future enhancement
         tvdb_api_key = config.get("metadata", "tvdb_api_key")
         self.tvdb = TheTVDBProvider(api_key=tvdb_api_key) if tvdb_api_key else None
 
@@ -517,7 +521,7 @@ class TVShowAdoptionWorkflow:
                 self.console.print(f"[yellow]Warning: Could not fetch metadata for season {season_num}: {e}[/yellow]")
                 episode_metadata_list = []
 
-            # Match episodes using filename hints and duration
+            # Match episodes using filename hints
             self._match_season_episodes(season_episodes, episode_metadata_list)
 
             # Display matches for review
@@ -552,7 +556,7 @@ class TVShowAdoptionWorkflow:
         episodes = []
 
         # Fetch from TMDB
-        for ep_num in range(1, expected_episodes + 10):  # Fetch a few extra
+        for ep_num in range(1, expected_episodes + EXTRA_EPISODES_BUFFER):
             try:
                 ep_metadata = self.tmdb.get_episode(show_metadata.tmdb_id, season_num, ep_num)
                 if ep_metadata:
@@ -696,9 +700,28 @@ class TVShowAdoptionWorkflow:
                 # Write episode NFO
                 if episode_file.matched_episode:
                     if episode_file.episode_end:
-                        # Multi-episode NFO
-                        episodes_metadata = [episode_file.matched_episode]  # Simplified
-                        nfo_content = self.episode_nfo_generator.generate_multi_episode(episodes_metadata)
+                        # Multi-episode NFO - fetch metadata for all episodes in range
+                        episodes_metadata = []
+                        for ep_num in range(episode_file.episode, episode_file.episode_end + 1):
+                            try:
+                                ep_metadata = self.tmdb.get_episode(
+                                    show_metadata.tmdb_id, season_num, ep_num
+                                )
+                                if ep_metadata:
+                                    episodes_metadata.append(ep_metadata)
+                            except ProviderError:
+                                # If we can't fetch an episode, skip it
+                                if self.verbose:
+                                    self.console.print(
+                                        f"[yellow]Warning: Could not fetch metadata for "
+                                        f"S{season_num:02d}E{ep_num:02d}[/yellow]"
+                                    )
+
+                        if episodes_metadata:
+                            nfo_content = self.episode_nfo_generator.generate_multi_episode(episodes_metadata)
+                        else:
+                            # Fallback to single episode if we couldn't fetch multi-episode data
+                            nfo_content = self.episode_nfo_generator.generate(episode_file.matched_episode)
                     else:
                         nfo_content = self.episode_nfo_generator.generate(episode_file.matched_episode)
 
@@ -786,6 +809,7 @@ class TVShowAdoptionWorkflow:
 
         # Create action log
         log_entry = {
+            "type": "tv_adoption",
             "timestamp": datetime.now().isoformat(),
             "plan": plan.to_dict(),
             "results": [],
@@ -800,10 +824,16 @@ class TVShowAdoptionWorkflow:
                         if action.action == "create_dir":
                             action.destination.mkdir(parents=True, exist_ok=True)
                         elif action.action == "move":
+                            if action.destination is not None:
+                                action.destination.parent.mkdir(parents=True, exist_ok=True)
                             shutil.move(str(action.source), str(action.destination))
                         elif action.action == "copy":
+                            if action.destination is not None:
+                                action.destination.parent.mkdir(parents=True, exist_ok=True)
                             shutil.copy2(str(action.source), str(action.destination))
                         elif action.action == "write_nfo":
+                            if action.destination is not None:
+                                action.destination.parent.mkdir(parents=True, exist_ok=True)
                             action.destination.write_text(action.content, encoding="utf-8")
 
                         log_entry["results"].append({

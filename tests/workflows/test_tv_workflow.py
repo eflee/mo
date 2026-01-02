@@ -8,7 +8,7 @@ import pytest
 
 from mo.config import Config
 from mo.library import Library
-from mo.providers.base import SearchResult, TVShowMetadata, EpisodeMetadata, Actor, Rating
+from mo.providers.base import TVShowMetadata, EpisodeMetadata, Actor, Rating
 from mo.workflows.tv import TVShowAdoptionWorkflow, FileAction, EpisodeFile, AdoptionPlan
 
 
