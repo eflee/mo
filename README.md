@@ -4,9 +4,39 @@ An interactive command-line tool for organizing movie and TV show files into the
 
 ## Overview
 
-`mo.py` helps you transform messy media files into properly organized, metadata-rich file systems based libraries. It's intended to work adopts the same organzation strucutre as Jellyfin for compatability. 
-I wrote this as a way to agnostically organize media using online metadata sources to name, match,sort and organize files easily. 
-It handles the complexity and interactively works with the user to pull files into evergreen libraries.
+`mo.py` helps you transform messy media files into properly organized, metadata-rich file systems based libraries. It adopts the same organization structure as Jellyfin for compatibility.
+
+**Input: Flexible and forgiving** - mo.py accepts media in any structure, from complete chaos to already-organized Jellyfin folders.
+
+**Output: Strict and standardized** - mo.py always produces Jellyfin-compatible directory structures with complete NFO metadata files.
+
+I wrote this as a way to agnostically organize media using online metadata sources to name, match, sort and organize files easily. It handles the complexity and interactively works with the user to pull files into evergreen libraries.
+
+### What mo.py Can Import
+
+mo.py is designed to handle a wide variety of input scenarios:
+
+**Movies:**
+- **Jellyfin-compatible folder** - A properly structured movie folder (will re-import/update metadata)
+- **Single media file** - Just a video file (e.g., `Inception.mkv`)
+- **Unstructured folder** - A directory containing a movie and possibly extras, subtitles, etc.
+
+**TV Shows:**
+- **Jellyfin-compatible folder** - Complete or partial series already in Jellyfin structure (will re-import/update metadata)
+- **Season-specific Jellyfin folder** - A single season in proper Jellyfin format
+- **Unstructured complete/partial series** - Files organized by:
+  - Subdirectories (e.g., `Season 01/`, `S01/`)
+  - Filename prefixes (e.g., `S01E01`, `S02E03`)
+  - Mixed organization patterns
+  - No organization at all (mo.py will attempt to identify seasons and episodes)
+- **Unstructured single season** - A folder of episode files for one season
+
+For unstructured TV shows, mo.py uses:
+- **Filename pattern matching** - Recognizes S##E## notation, date-based episodes, absolute numbering
+- **Duration-based matching** - Compares file lengths with authoritative episode runtimes from metadata providers
+- **Confidence scoring** - Presents match confidence to help you verify correctness
+
+The tool is fundamentally designed to **import directories of loosely structured media** and **move them into Jellyfin-compatible directory formats** with populated NFO metadata.
 
 ## Key Features
 
@@ -123,11 +153,13 @@ Every adoption operation:
   - Operation mode (move or copy)
 - Log can be used to manually reverse operations if needed
 
-## Jellyfin Compatibility
+## Jellyfin Compatibility (Output Format)
 
-### Folder Structure
+mo.py **produces** Jellyfin-compatible output, regardless of the input structure. The tool transforms whatever you provide into the strict format Jellyfin expects.
 
-mo.py follows Jellyfin's naming conventions ([Movies Documentation](https://jellyfin.org/docs/general/server/media/movies/), [TV Shows Documentation](https://jellyfin.org/docs/general/server/media/shows/)):
+### Folder Structure (Output)
+
+mo.py **generates** folder structures following Jellyfin's naming conventions ([Movies Documentation](https://jellyfin.org/docs/general/server/media/movies/), [TV Shows Documentation](https://jellyfin.org/docs/general/server/media/shows/)):
 
 **Movies:**
 - Format: `Movie Name (Year)/Movie Name (Year).ext`
@@ -238,29 +270,40 @@ mo.py library info <library_name>
 
 ### Adopting Media
 
-The `adopt` command processes media files from a source directory and integrates them into a configured library with proper Jellyfin structure and metadata. The command behavior varies based on the media type:
+The `adopt` command processes media files from a source directory and integrates them into a configured library with proper Jellyfin structure and metadata. **Input can be in any structure** - mo.py will analyze and transform it. The command behavior varies based on the media type:
 
 #### `adopt movie [directory]`
-Assumes the target is either:
-- A single media file, OR
-- A directory containing a single movie (which may include multiple files like extras, behind-the-scenes, etc.)
+**Input:** Accepts any of the following:
+- A single media file (e.g., `Inception.mkv`)
+- A directory containing a single movie (may include extras, subtitles, etc.)
+- A Jellyfin-compatible movie folder (will re-import/update metadata)
+
+**Output:** Jellyfin-compatible movie folder with NFO metadata.
 
 Uses current directory if `[directory]` is not specified.
 
 #### `adopt show [directory]`
-Assumes the target is a directory storing all or part of a TV show. The directory may be:
-- Divided into season-based subdirectories (e.g., `Season 01/`, `Season 02/`)
-- Organized with season prefixes in filenames (e.g., `S01E01`, `S02E03`)
-- A mix of organizational patterns
+**Input:** Accepts a directory storing all or part of a TV show in any structure:
+- **Already Jellyfin-compatible** (will re-import/update metadata)
+- **Structured with subdirectories** (e.g., `Season 01/`, `Season 02/`)
+- **Structured with filename prefixes** (e.g., `S01E01`, `S02E03`)
+- **Mixed or no organization** - mo.py will attempt to identify seasons and episodes
 
 mo.py intelligently assigns individual media files as episodes using:
-- **Duration-based matching**: Compares file length with expected episode runtime
-- **Filename hints**: Parses season/episode patterns from filenames
+- **Filename hints**: Parses season/episode patterns (S##E##, date-based, absolute numbering)
+- **Duration-based matching**: Compares file length with authoritative episode runtime from metadata providers
+- **Confidence scoring**: Presents match confidence for your verification
+
+**Output:** Jellyfin-compatible series folder with tvshow.nfo and per-episode NFO files.
 
 Uses current directory if `[directory]` is not specified.
 
 #### `adopt show --season <n> [directory]`
-Assumes the target is a directory storing all or part of a specific season (number provided as `<n>`). This is essentially a partial operation of adopting an entire show, scoped to a single season.
+**Input:** A directory storing all or part of a specific season (number provided as `<n>`). Can be structured or unstructured.
+
+**Output:** Season subfolder within series structure with episode NFO files.
+
+This is essentially a partial operation of adopting an entire show, scoped to a single season.
 
 Uses current directory if `[directory]` is not specified.
 
