@@ -1,5 +1,6 @@
 """Media metadata extraction using pymediainfo."""
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
@@ -8,6 +9,8 @@ try:
     from pymediainfo import MediaInfo as PyMediaInfo
 except ImportError:
     PyMediaInfo = None
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -118,8 +121,13 @@ class MediaMetadataExtractor:
                 audio_tracks=audio_tracks if audio_tracks else None,
             )
 
-        except (OSError, PermissionError, Exception):
-            # Handle corrupted or inaccessible files gracefully
+        except (OSError, PermissionError) as e:
+            # Handle inaccessible files
+            logger.debug(f"Could not access file {file_path}: {e}")
+            return None
+        except Exception as e:
+            # Handle corrupted files or pymediainfo errors
+            logger.warning(f"Failed to extract metadata from {file_path}: {type(e).__name__}: {e}")
             return None
 
     def get_duration(self, file_path: Path) -> Optional[float]:

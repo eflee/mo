@@ -1,6 +1,6 @@
 """Media file scanning and detection."""
 
-import os
+import re
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -242,7 +242,9 @@ class MediaScanner:
             # Check if they're all in season-like subdirectories
             # This would be DEDICATED (TV show with seasons)
             parent_names = {p.name.lower() for p in parent_dirs}
-            if all("season" in name or name.startswith("s") for name in parent_names):
+            # Match "season" keyword or s-digit patterns (s1, s01, etc.)
+            season_pattern = re.compile(r'^s\d+$')
+            if all("season" in name or season_pattern.match(name) for name in parent_names):
                 return ContentType.DEDICATED
 
         # If videos are spread across multiple directories at root level, it's MIXED

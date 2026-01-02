@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from mo.media.scanner import ContentType, MediaFile, MediaScanner, ScanResult
+from mo.media.scanner import ContentType, MediaScanner, ScanResult
 
 
 class TestMediaScanner:
