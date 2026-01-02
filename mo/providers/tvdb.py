@@ -348,7 +348,7 @@ class TheTVDBProvider:
             episode_number=episode_number,
             title=episode_data.get("name"),
             plot=episode_data.get("overview"),
-            air_date=episode_data.get("aired"),
+            aired=episode_data.get("aired"),
             runtime=episode_data.get("runtime"),
             rating=None,
             still_url=episode_data.get("image"),

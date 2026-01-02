@@ -360,7 +360,7 @@ class TMDBProvider:
             episode_number=episode_number,
             title=data.get("name"),
             plot=data.get("overview"),
-            air_date=data.get("air_date"),
+            aired=data.get("air_date"),
             runtime=data.get("runtime"),
             rating=data.get("vote_average"),
             still_url=self._get_image_url(data.get("still_path")),

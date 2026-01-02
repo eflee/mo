@@ -1228,43 +1228,43 @@ All features listed below are required for v1.0 release. Each phase includes com
   - [x] Determine appropriate NFO naming strategy
   - [x] **Unit tests:** Folder type detection, edge cases with extras/samples
 
-### Phase 5: NFO Generation Engine
+### Phase 5: NFO Generation Engine ✅
 **Goal:** Generate Jellyfin-compatible NFO XML files for movies, TV shows, and episodes.
 
-- [ ] **NFO XML builder**
-  - [ ] XML generation with proper encoding (UTF-8)
-  - [ ] Pretty-printing with indentation
-  - [ ] Element ordering matching Jellyfin's savers
-  - [ ] **Unit tests:** XML structure, encoding, element ordering
-- [ ] **Movie NFO generation**
-  - [ ] Root element: `<movie>` or `<musicvideo>`
-  - [ ] Common fields: title, originaltitle, sorttitle, year, plot, tagline, mpaa, genre, studio, runtime, premiered, director, writer, actor, ratings
-  - [ ] Modern `<uniqueid type="imdb">` format for provider IDs
-  - [ ] Legacy `<id>` for IMDb (backwards compatibility)
-  - [ ] Collection support with `<set><name>` and optional `tmdbcolid` attribute
-  - [ ] Actor elements with role, thumb, order
-  - [ ] Multiple genre and studio elements
-  - [ ] **Unit tests:** Complete NFO generation, field validation, XML validity, legacy format support
-- [ ] **TV show NFO generation (tvshow.nfo)**
-  - [ ] Root element: `<tvshow>`
-  - [ ] Common fields: title, year, plot, genre, studio, mpaa, actor, ratings
-  - [ ] `<episodeguide>` with TVDB URL and language
-  - [ ] `<status>` (Continuing, Ended)
-  - [ ] Placeholder `<season>-1</season>` and `<episode>-1</episode>`
-  - [ ] **Unit tests:** Complete tvshow.nfo generation, episodeguide URL format, field validation
-- [ ] **Episode NFO generation**
-  - [ ] Root element: `<episodedetails>`
-  - [ ] Episode-specific fields: showtitle, season, episode, episodenumberend, aired
-  - [ ] Common fields: title, plot, director, writer, actor, ratings
-  - [ ] Multi-episode support: multiple `<episodedetails>` blocks in one file
-  - [ ] Special episode fields for Season 0: airsafter_season, airsbefore_season, airsbefore_episode, displayseason, displayepisode
-  - [ ] **Unit tests:** Episode NFO generation, multi-episode files, Season 0 specials, field validation
-- [ ] **NFO file path determination**
-  - [ ] Movies: `movie.nfo` (dedicated folder) or `<filename>.nfo` (mixed folder)
-  - [ ] Movies (DVD): `VIDEO_TS/VIDEO_TS.nfo`
-  - [ ] TV shows: `tvshow.nfo` in series root
-  - [ ] Episodes: `<filename>.nfo` matching episode file
-  - [ ] **Unit tests:** Path selection logic for all content types
+- [x] **NFO XML builder**
+  - [x] XML generation with proper encoding (UTF-8)
+  - [x] Pretty-printing with indentation
+  - [x] Element ordering matching Jellyfin's savers
+  - [x] **Unit tests:** XML structure, encoding, element ordering
+- [x] **Movie NFO generation**
+  - [x] Root element: `<movie>` or `<musicvideo>`
+  - [x] Common fields: title, originaltitle, sorttitle, year, plot, tagline, mpaa, genre, studio, runtime, premiered, director, writer, actor, ratings
+  - [x] Modern `<uniqueid type="imdb">` format for provider IDs
+  - [x] Legacy `<id>` for IMDb (backwards compatibility)
+  - [x] Collection support with `<set><name>` and optional `tmdbcolid` attribute
+  - [x] Actor elements with role, thumb, order
+  - [x] Multiple genre and studio elements
+  - [x] **Unit tests:** Complete NFO generation, field validation, XML validity, legacy format support
+- [x] **TV show NFO generation (tvshow.nfo)**
+  - [x] Root element: `<tvshow>`
+  - [x] Common fields: title, year, plot, genre, studio, mpaa, actor, ratings
+  - [x] `<episodeguide>` with TVDB URL and language
+  - [x] `<status>` (Continuing, Ended)
+  - [x] Placeholder `<season>-1</season>` and `<episode>-1</episode>`
+  - [x] **Unit tests:** Complete tvshow.nfo generation, episodeguide URL format, field validation
+- [x] **Episode NFO generation**
+  - [x] Root element: `<episodedetails>`
+  - [x] Episode-specific fields: showtitle, season, episode, episodenumberend, aired
+  - [x] Common fields: title, plot, director, writer, actor, ratings
+  - [x] Multi-episode support: multiple `<episodedetails>` blocks in one file
+  - [x] Special episode fields for Season 0: airsafter_season, airsbefore_season, airsbefore_episode, displayseason, displayepisode
+  - [x] **Unit tests:** Episode NFO generation, multi-episode files, Season 0 specials, field validation
+- [x] **NFO file path determination**
+  - [x] Movies: `movie.nfo` (dedicated folder) or `<filename>.nfo` (mixed folder)
+  - [x] Movies (DVD): `VIDEO_TS/VIDEO_TS.nfo`
+  - [x] TV shows: `tvshow.nfo` in series root
+  - [x] Episodes: `<filename>.nfo` matching episode file
+  - [x] **Unit tests:** Path selection logic for all content types
 
 ### Phase 6: Movie Adoption Workflow
 **Goal:** Implement end-to-end movie adoption with interactive steps and NFO generation.

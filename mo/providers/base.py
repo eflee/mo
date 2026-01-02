@@ -37,6 +37,25 @@ class NotFoundError(ProviderError):
 
 
 @dataclass
+class Actor:
+    """Actor information for NFO generation."""
+
+    name: str
+    role: Optional[str] = None
+    order: Optional[int] = None
+    thumb: Optional[str] = None  # URL to actor photo
+
+
+@dataclass
+class Rating:
+    """Rating information from a provider."""
+
+    source: str  # e.g., "imdb", "tmdb", "tvdb"
+    value: float  # Rating value (e.g., 8.5)
+    votes: Optional[int] = None  # Number of votes
+
+
+@dataclass
 class SearchResult:
     """Generic search result from a metadata provider."""
 
@@ -60,17 +79,27 @@ class MovieMetadata:
     id: str
     title: str
     year: Optional[int] = None
+    original_title: Optional[str] = None
+    sort_title: Optional[str] = None
     plot: Optional[str] = None
+    tagline: Optional[str] = None
     runtime: Optional[int] = None  # minutes
+    premiered: Optional[str] = None  # ISO format YYYY-MM-DD
     rating: Optional[float] = None
+    ratings: Optional[List[Rating]] = None  # Multiple rating sources
+    content_rating: Optional[str] = None  # MPAA rating (e.g., "PG-13")
     genres: Optional[List[str]] = None
-    cast: Optional[List[str]] = None
+    studios: Optional[List[str]] = None
+    collection: Optional[str] = None
+    directors: Optional[List[str]] = None
+    writers: Optional[List[str]] = None
+    actors: Optional[List[Actor]] = None
+    cast: Optional[List[str]] = None  # Legacy simple cast list
     crew: Optional[Dict[str, List[str]]] = None  # role -> names
     poster_url: Optional[str] = None
     backdrop_url: Optional[str] = None
     imdb_id: Optional[str] = None
     tmdb_id: Optional[str] = None
-    collection: Optional[str] = None
     raw_data: Optional[Dict[str, Any]] = None
 
 
@@ -82,10 +111,16 @@ class TVShowMetadata:
     id: str
     title: str
     year: Optional[int] = None
+    original_title: Optional[str] = None
     plot: Optional[str] = None
+    premiered: Optional[str] = None  # ISO format YYYY-MM-DD
     rating: Optional[float] = None
+    ratings: Optional[List[Rating]] = None
+    content_rating: Optional[str] = None
     genres: Optional[List[str]] = None
-    cast: Optional[List[str]] = None
+    networks: Optional[List[str]] = None  # Studios/Networks
+    actors: Optional[List[Actor]] = None
+    cast: Optional[List[str]] = None  # Legacy simple cast list
     poster_url: Optional[str] = None
     backdrop_url: Optional[str] = None
     imdb_id: Optional[str] = None
@@ -105,11 +140,26 @@ class EpisodeMetadata:
     season_number: int
     episode_number: int
     title: Optional[str] = None
+    show_title: Optional[str] = None
     plot: Optional[str] = None
-    air_date: Optional[str] = None  # ISO format YYYY-MM-DD
+    aired: Optional[str] = None  # ISO format YYYY-MM-DD (renamed from air_date)
     runtime: Optional[int] = None  # minutes
     rating: Optional[float] = None
+    ratings: Optional[List[Rating]] = None
+    directors: Optional[List[str]] = None
+    writers: Optional[List[str]] = None
+    actors: Optional[List[Actor]] = None
     still_url: Optional[str] = None
+    imdb_id: Optional[str] = None
+    tmdb_id: Optional[str] = None
+    tvdb_id: Optional[str] = None
+    episode_number_end: Optional[int] = None  # For multi-episode files
+    # Special episode fields (Season 0 specials)
+    airs_after_season: Optional[int] = None
+    airs_before_season: Optional[int] = None
+    airs_before_episode: Optional[int] = None
+    display_season: Optional[int] = None
+    display_episode: Optional[int] = None
     raw_data: Optional[Dict[str, Any]] = None
 
 
