@@ -327,7 +327,7 @@ def list_config(section: Optional[str]):
 
 
 # ============================================================================
-# Adopt Commands (Placeholder for Phase 2)
+# Adopt Commands
 # ============================================================================
 
 
@@ -338,27 +338,90 @@ def adopt():
 
 
 @adopt.command()
-@click.argument("file", type=click.Path(exists=True, path_type=Path))
-def movie(file: Path):
+@click.argument(
+    "directory",
+    type=click.Path(exists=True, path_type=Path),
+    required=False,
+    default=None,
+)
+@click.option(
+    "--library",
+    "-l",
+    help="Library name (auto-selects if only one movie library exists)",
+)
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Skip confirmation prompts",
+)
+@click.pass_context
+def movie(ctx, directory: Optional[Path], library: Optional[str], force: bool):
     """
-    Adopt a movie file.
+    Adopt a movie file or directory.
 
-    FILE: Path to movie file
+    DIRECTORY: Path to movie file or directory (defaults to current directory)
     """
-    console.print("[yellow]Movie adoption not yet implemented (Phase 2).[/yellow]")
-    console.print(f"Would adopt: {file}")
+    from mo.workflows import MovieAdoptionWorkflow
+
+    # Use current directory if not specified
+    source_path = directory or Path.cwd()
+
+    config = get_config()
+    if config is None:
+        sys.exit(1)
+
+    try:
+        workflow = MovieAdoptionWorkflow(
+            config=config,
+            console=console,
+            verbose=ctx.obj.get("verbose", False),
+            dry_run=ctx.obj.get("dry_run", False),
+        )
+
+        success = workflow.adopt(
+            source_path=source_path,
+            library_name=library,
+            preserve=ctx.obj.get("preserve", False),
+            force=force,
+        )
+
+        sys.exit(0 if success else 1)
+
+    except MoError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        sys.exit(1)
 
 
 @adopt.command()
-@click.argument("file", type=click.Path(exists=True, path_type=Path))
-def show(file: Path):
+@click.argument(
+    "directory",
+    type=click.Path(exists=True, path_type=Path),
+    required=False,
+    default=None,
+)
+@click.option(
+    "--library",
+    "-l",
+    help="Library name (auto-selects if only one show library exists)",
+)
+@click.option(
+    "--season",
+    "-s",
+    type=int,
+    help="Season number (for adopting a single season)",
+)
+def show(directory: Optional[Path], library: Optional[str], season: Optional[int]):
     """
-    Adopt a TV show file.
+    Adopt a TV show directory.
 
-    FILE: Path to TV show file
+    DIRECTORY: Path to TV show directory (defaults to current directory)
     """
-    console.print("[yellow]TV show adoption not yet implemented (Phase 2).[/yellow]")
-    console.print(f"Would adopt: {file}")
+    console.print("[yellow]TV show adoption not yet implemented (Phase 7).[/yellow]")
+    if directory:
+        console.print(f"Would adopt: {directory}")
+    if season:
+        console.print(f"Season: {season}")
 
 
 def main():
