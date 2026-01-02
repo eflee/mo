@@ -162,7 +162,7 @@ class InteractiveSearch:
 
     def _display_and_select(
         self, results: List[SearchResult], search_title: str
-    ) -> Optional[SearchResult] | str:
+    ) -> SearchResult | str | None:
         """Display results and prompt user to select one.
 
         Args:

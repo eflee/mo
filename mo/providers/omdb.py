@@ -222,7 +222,45 @@ class OMDbProvider:
         """
         params = {"i": movie_id, "type": "movie", "plot": "full"}
         data = self._request(params)
+        return self._parse_movie_data(data)
 
+    def get_movie_by_title(
+        self, title: str, year: Optional[int] = None
+    ) -> MovieMetadata:
+        """Get movie metadata by title (convenience method).
+
+        Args:
+            title: Movie title
+            year: Optional release year
+
+        Returns:
+            MovieMetadata: Movie metadata
+
+        Raises:
+            ProviderError: If retrieval fails
+            NotFoundError: If movie not found
+        """
+        params: Dict[str, Any] = {"t": title, "type": "movie", "plot": "full"}
+        if year:
+            params["y"] = year
+
+        data = self._request(params)
+
+        imdb_id = data.get("imdbID")
+        if not imdb_id:
+            raise NotFoundError(f"Movie not found: {title}")
+
+        return self._parse_movie_data(data)
+
+    def _parse_movie_data(self, data: Dict[str, Any]) -> MovieMetadata:
+        """Parse OMDb API response into MovieMetadata.
+
+        Args:
+            data: Raw OMDb API response
+
+        Returns:
+            MovieMetadata: Parsed movie metadata
+        """
         # Parse runtime (format: "142 min")
         runtime = None
         if data.get("Runtime") and data["Runtime"] != "N/A":
@@ -268,83 +306,8 @@ class OMDbProvider:
             cast=cast,
             crew=crew if crew else None,
             poster_url=data.get("Poster") if data.get("Poster") != "N/A" else None,
-            backdrop_url=None,  # OMDb doesn't provide backdrops
-            imdb_id=data.get("imdbID"),
-            tmdb_id=None,
-            collection=None,
-            raw_data=data,
-        )
-
-    def get_movie_by_title(
-        self, title: str, year: Optional[int] = None
-    ) -> MovieMetadata:
-        """Get movie metadata by title (convenience method).
-
-        Args:
-            title: Movie title
-            year: Optional release year
-
-        Returns:
-            MovieMetadata: Movie metadata
-
-        Raises:
-            ProviderError: If retrieval fails
-            NotFoundError: If movie not found
-        """
-        params: Dict[str, Any] = {"t": title, "type": "movie", "plot": "full"}
-        if year:
-            params["y"] = year
-
-        data = self._request(params)
-
-        # Reuse get_movie logic by passing the retrieved data
-        imdb_id = data.get("imdbID")
-        if not imdb_id:
-            raise NotFoundError(f"Movie not found: {title}")
-
-        # We already have the full data, so parse it directly
-        runtime = None
-        if data.get("Runtime") and data["Runtime"] != "N/A":
-            try:
-                runtime = int(data["Runtime"].split()[0])
-            except (ValueError, IndexError):
-                pass
-
-        rating = None
-        if data.get("imdbRating") and data["imdbRating"] != "N/A":
-            try:
-                rating = float(data["imdbRating"])
-            except ValueError:
-                pass
-
-        genres = None
-        if data.get("Genre") and data["Genre"] != "N/A":
-            genres = [g.strip() for g in data["Genre"].split(",")]
-
-        cast = None
-        if data.get("Actors") and data["Actors"] != "N/A":
-            cast = [a.strip() for a in data["Actors"].split(",")]
-
-        crew = {}
-        if data.get("Director") and data["Director"] != "N/A":
-            crew["Director"] = [d.strip() for d in data["Director"].split(",")]
-        if data.get("Writer") and data["Writer"] != "N/A":
-            crew["Writer"] = [w.strip() for w in data["Writer"].split(",")]
-
-        return MovieMetadata(
-            provider="omdb",
-            id=imdb_id,
-            title=data.get("Title", ""),
-            year=self._parse_year(data.get("Year")),
-            plot=data.get("Plot") if data.get("Plot") != "N/A" else None,
-            runtime=runtime,
-            rating=rating,
-            genres=genres,
-            cast=cast,
-            crew=crew if crew else None,
-            poster_url=data.get("Poster") if data.get("Poster") != "N/A" else None,
             backdrop_url=None,
-            imdb_id=imdb_id,
+            imdb_id=data.get("imdbID"),
             tmdb_id=None,
             collection=None,
             raw_data=data,

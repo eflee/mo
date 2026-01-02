@@ -269,6 +269,14 @@ class TheTVDBProvider:
         if series.get("image"):
             poster_url = series["image"]
 
+        # Extract IMDB ID from remote IDs
+        imdb_id = None
+        if series.get("remoteIds"):
+            for remote_id in series["remoteIds"]:
+                if remote_id.get("sourceName") == "IMDB":
+                    imdb_id = remote_id.get("id")
+                    break
+
         return TVShowMetadata(
             provider="tvdb",
             id=str(series["id"]),
@@ -280,7 +288,7 @@ class TheTVDBProvider:
             cast=None,  # Cast requires separate API call
             poster_url=poster_url,
             backdrop_url=None,
-            imdb_id=series.get("remoteIds", [{}])[0].get("id") if series.get("remoteIds") else None,
+            imdb_id=imdb_id,
             tmdb_id=None,
             tvdb_id=str(series["id"]),
             seasons=len(series.get("seasons", [])),
