@@ -2,7 +2,7 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -193,7 +193,6 @@ class TestMovieAdoptionWorkflow:
         assert plan.preserve_originals is True
 
         # Check actions include extras directory and extra file
-        action_types = [action.action for action in plan.actions]
         copy_actions = [a for a in plan.actions if a.action == "copy"]
 
         # Should copy main + extra + subtitle

@@ -1,7 +1,7 @@
 """Movie adoption workflow with interactive steps."""
 
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Dict, Any
@@ -14,7 +14,7 @@ from prompt_toolkit import prompt
 
 from mo.config import Config
 from mo.library import LibraryManager, Library
-from mo.media.scanner import ContentType, MediaScanner
+from mo.media.scanner import MediaScanner
 from mo.nfo.movie import MovieNFOGenerator
 from mo.parsers.movie import parse_movie_filename
 from mo.parsers.sanitize import sanitize_filename
@@ -244,7 +244,12 @@ class MovieAdoptionWorkflow:
                 return movie_libraries[index]
             else:
                 raise MoError("Invalid library selection")
-        except (ValueError, KeyboardInterrupt, EOFError):
+        except ValueError:
+            raise MoError(
+                f"Invalid library selection: {choice!r}. "
+                f"Please enter a number between 1 and {len(movie_libraries)}."
+            )
+        except (KeyboardInterrupt, EOFError):
             raise MoError("Library selection cancelled")
 
     def _parse_source_path(self, source_path: Path) -> tuple[str, Optional[int]]:
@@ -257,7 +262,7 @@ class MovieAdoptionWorkflow:
             tuple[str, Optional[int]]: (title, year)
         """
         # Try parsing the directory name or filename
-        name = source_path.name if source_path.is_file() else source_path.name
+        name = source_path.name
 
         result = parse_movie_filename(name)
         title = result.title if result else name
@@ -473,8 +478,21 @@ class MovieAdoptionWorkflow:
                 destination=extras_dir,
             ))
 
+            # Track seen filenames to handle conflicts
+            seen_filenames: Dict[str, int] = {}
             for extra_file in files["extras"]:
-                extra_dest = extras_dir / extra_file.name
+                filename = extra_file.name
+
+                # Handle duplicate filenames
+                if filename in seen_filenames:
+                    seen_filenames[filename] += 1
+                    stem = extra_file.stem
+                    suffix = extra_file.suffix
+                    filename = f"{stem}_{seen_filenames[filename]}{suffix}"
+                else:
+                    seen_filenames[filename] = 1
+
+                extra_dest = extras_dir / filename
                 actions.append(FileAction(
                     action="copy" if preserve else "move",
                     source=extra_file,
@@ -484,8 +502,21 @@ class MovieAdoptionWorkflow:
 
         # Subtitles
         if files["subtitles"]:
+            # Track seen filenames to handle conflicts
+            seen_filenames: Dict[str, int] = {}
             for sub_file in files["subtitles"]:
-                sub_dest = movie_folder / sub_file.name
+                filename = sub_file.name
+
+                # Handle duplicate filenames
+                if filename in seen_filenames:
+                    seen_filenames[filename] += 1
+                    stem = sub_file.stem
+                    suffix = sub_file.suffix
+                    filename = f"{stem}_{seen_filenames[filename]}{suffix}"
+                else:
+                    seen_filenames[filename] = 1
+
+                sub_dest = movie_folder / filename
                 actions.append(FileAction(
                     action="copy" if preserve else "move",
                     source=sub_file,
@@ -655,6 +686,7 @@ class MovieAdoptionWorkflow:
                 with open(log_path, "w", encoding="utf-8") as f:
                     json.dump(log_entry, f, indent=2)
             except Exception:
+                # If writing the failure log also fails, ignore it to avoid masking the original error
                 pass
 
             return False
