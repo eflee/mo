@@ -21,15 +21,11 @@ RESERVED_CHARS: Dict[str, str] = {
     "*": "",
 }
 
-# Compiled regex for performance (DRY - compile once)
 _RESERVED_CHARS_PATTERN = re.compile("|".join(re.escape(char) for char in RESERVED_CHARS.keys()))
 
 
 def sanitize_filename(filename: str, replacement: str = "") -> str:
-    """
-    Sanitize a filename by removing/replacing reserved characters.
-
-    Single Responsibility: Only handles character sanitization.
+    """Sanitize a filename by removing/replacing reserved characters.
 
     Args:
         filename: The filename to sanitize
@@ -57,7 +53,7 @@ def sanitize_filename(filename: str, replacement: str = "") -> str:
     sanitized = _RESERVED_CHARS_PATTERN.sub(replacement, sanitized)
 
     # Remove leading/trailing whitespace and dots
-    sanitized = sanitized.strip(). strip(".")
+    sanitized = sanitized.strip().strip(".")
 
     if not sanitized:
         raise ValidationError(
@@ -69,10 +65,7 @@ def sanitize_filename(filename: str, replacement: str = "") -> str:
 
 
 def validate_path_length(path: str) -> None:
-    """
-    Validate that a path does not exceed platform-specific limits.
-
-    Single Responsibility: Only validates path length.
+    """Validate that a path does not exceed platform-specific limits.
 
     Args:
         path: The path to validate
@@ -92,8 +85,6 @@ def validate_path_length(path: str) -> None:
 def truncate_filename(filename: str, max_length: int = 255, suffix: str = "") -> str:
     """
     Truncate a filename to a maximum length while preserving the extension.
-
-    Single Responsibility: Only handles filename truncation.
 
     Args:
         filename: The filename to truncate

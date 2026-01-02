@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Optional
 from mo.utils.errors import ConfigError
 from mo.utils.platform import get_user_config_dir
 
-# Default configuration file names (DRY - single source of truth)
 LOCAL_CONFIG_NAME = ".mo.conf"
 USER_CONFIG_NAME = "config"
 
@@ -22,7 +21,6 @@ class Config:
     """
     Configuration manager with hierarchical loading.
 
-    Single Responsibility: Manages configuration loading, accessing, and saving.
 
     Loads configuration from:
     1. Local .mo.conf in current directory (highest priority)
@@ -50,7 +48,6 @@ class Config:
         """
         Load configuration from hierarchical sources.
 
-        Single Responsibility: Only handles loading logic.
 
         Raises:
             ConfigError: If no configuration file is found
@@ -79,7 +76,6 @@ class Config:
         """
         Get a configuration value.
 
-        Single Responsibility: Only retrieves values.
 
         Args:
             section: Configuration section
@@ -95,7 +91,6 @@ class Config:
         """
         Get a boolean configuration value.
 
-        Single Responsibility: Only retrieves boolean values.
 
         Args:
             section: Configuration section
@@ -111,7 +106,6 @@ class Config:
         """
         Get an integer configuration value.
 
-        Single Responsibility: Only retrieves integer values.
 
         Args:
             section: Configuration section
@@ -127,7 +121,6 @@ class Config:
         """
         Set a configuration value.
 
-        Single Responsibility: Only sets values (does not save).
 
         Args:
             section: Configuration section
@@ -143,7 +136,6 @@ class Config:
         """
         Save configuration to file.
 
-        Single Responsibility: Only handles saving.
 
         Args:
             target: Target location ('local' or 'user'). If None, saves to active config.
@@ -175,7 +167,6 @@ class Config:
         """
         Get all configured libraries.
 
-        Single Responsibility: Only retrieves library configuration.
 
         Returns:
             Dict[str, str]: Dictionary mapping library names to paths
@@ -189,7 +180,6 @@ class Config:
         """
         Get all library types.
 
-        Single Responsibility: Only retrieves library type configuration.
 
         Returns:
             Dict[str, str]: Dictionary mapping library names to types ('movie' or 'show')
@@ -227,7 +217,6 @@ class Config:
         """
         Remove a library from configuration.
 
-        Single Responsibility: Only removes library entries.
 
         Args:
             name: Library name to remove
