@@ -16,7 +16,6 @@ from mo.config import Config
 from mo.library import LibraryManager, Library
 from mo.media.scanner import ContentType, MediaScanner
 from mo.nfo.movie import MovieNFOGenerator
-from mo.nfo.paths import NFOPathResolver
 from mo.parsers.movie import parse_movie_filename
 from mo.parsers.sanitize import sanitize_filename
 from mo.providers.base import SearchResult, MovieMetadata, ProviderError
