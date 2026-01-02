@@ -1201,32 +1201,32 @@ All features listed below are required for v1.0 release. Each phase includes com
   - [x] Fuzzy matching and relevance scoring
   - [x] **Unit tests:** Result display formatting, user input handling (mocked)
 
-### Phase 4: File Analysis and Media Detection
+### Phase 4: File Analysis and Media Detection ✅
 **Goal:** Scan directories, identify media files, and extract metadata (duration, codecs).
 
-- [ ] **Media file detection**
-  - [ ] Scan directories for video extensions (mp4, mkv, avi, m4v, mov, wmv, flv, webm)
-  - [ ] Handle single files vs directories
-  - [ ] Recursive directory traversal with depth limits
-  - [ ] Subtitle file detection (srt, sub, ass, ssa, vtt)
-  - [ ] Ignore hidden files and system files
-  - [ ] **Unit tests:** File scanning, extension matching, recursion, subtitle detection
-- [ ] **Media file metadata extraction**
-  - [ ] Use ffprobe or pymediainfo to extract duration
-  - [ ] Extract resolution, codec information (for logging/debugging)
-  - [ ] Handle corrupted or inaccessible files gracefully
-  - [ ] **Unit tests:** Duration extraction (mocked ffprobe), error handling for corrupted files
-- [ ] **Duration-based episode matching**
-  - [ ] Compare file duration with expected episode runtime from TVDB/TMDB
-  - [ ] Tolerance threshold (e.g., ±5 minutes)
-  - [ ] Confidence scoring: exact match (100%), close match (80%), poor match (50%)
-  - [ ] Combine with filename hints for final confidence score
-  - [ ] **Unit tests:** Duration comparison, confidence scoring, tolerance thresholds
-- [ ] **Content type detection (mixed vs dedicated folders)**
-  - [ ] Detect dedicated movie folders (single video file)
-  - [ ] Detect mixed folders (multiple video files)
-  - [ ] Determine appropriate NFO naming strategy
-  - [ ] **Unit tests:** Folder type detection, edge cases with extras/samples
+- [x] **Media file detection**
+  - [x] Scan directories for video extensions (mp4, mkv, avi, m4v, mov, wmv, flv, webm)
+  - [x] Handle single files vs directories
+  - [x] Recursive directory traversal with depth limits
+  - [x] Subtitle file detection (srt, sub, ass, ssa, vtt)
+  - [x] Ignore hidden files and system files
+  - [x] **Unit tests:** File scanning, extension matching, recursion, subtitle detection
+- [x] **Media file metadata extraction**
+  - [x] Use ffprobe or pymediainfo to extract duration
+  - [x] Extract resolution, codec information (for logging/debugging)
+  - [x] Handle corrupted or inaccessible files gracefully
+  - [x] **Unit tests:** Duration extraction (mocked ffprobe), error handling for corrupted files
+- [x] **Duration-based episode matching**
+  - [x] Compare file duration with expected episode runtime from TVDB/TMDB
+  - [x] Tolerance threshold (e.g., ±5 minutes)
+  - [x] Confidence scoring: exact match (100%), close match (80%), poor match (50%)
+  - [x] Combine with filename hints for final confidence score
+  - [x] **Unit tests:** Duration comparison, confidence scoring, tolerance thresholds
+- [x] **Content type detection (mixed vs dedicated folders)**
+  - [x] Detect dedicated movie folders (single video file)
+  - [x] Detect mixed folders (multiple video files)
+  - [x] Determine appropriate NFO naming strategy
+  - [x] **Unit tests:** Folder type detection, edge cases with extras/samples
 
 ### Phase 5: NFO Generation Engine
 **Goal:** Generate Jellyfin-compatible NFO XML files for movies, TV shows, and episodes.
