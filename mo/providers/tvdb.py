@@ -4,6 +4,7 @@ Implements TheTVDB API v4 for TV show and episode metadata retrieval.
 Requires an API key from https://thetvdb.com/api-information
 """
 
+import logging
 import time
 from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
@@ -20,6 +21,8 @@ from mo.providers.base import (
     TVShowMetadata,
 )
 from mo.providers.cache import get_cache
+
+logger = logging.getLogger(__name__)
 
 
 class TheTVDBProvider:

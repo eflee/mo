@@ -1,6 +1,7 @@
 """TV show adoption workflow with interactive steps."""
 
 import json
+import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
@@ -27,6 +28,9 @@ from mo.providers.search import InteractiveSearch
 from mo.providers.tmdb import TMDBProvider
 from mo.providers.tvdb import TheTVDBProvider
 from mo.utils.errors import MoError
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 # Constants
@@ -167,34 +171,48 @@ class TVShowAdoptionWorkflow:
         Returns:
             bool: True if adoption succeeded, False otherwise
         """
+        logger.info(f"Starting TV show adoption workflow for: {source_path}")
+        logger.debug(f"Options: preserve={preserve}, force={force}, library={library_name}, season_filter={season_filter}")
+        
         try:
             # Step 1: Select library
             library = self._select_library(library_name)
+            logger.info(f"Selected library: {library.name} at {library.path}")
 
             # Step 2: Parse title/year from source path
             title_hint, year_hint = self._parse_source_path(source_path)
+            logger.debug(f"Parsed from source: title={title_hint}, year={year_hint}")
 
             # Step 3: Search for show metadata
             search_result = self._search_show_metadata(title_hint, year_hint)
             if not search_result:
+                logger.warning("TV show metadata search cancelled by user")
                 self.console.print("[yellow]Search cancelled.[/yellow]")
                 return False
 
             # Step 4: Get full show metadata
             show_metadata = self._get_full_show_metadata(search_result)
             if not show_metadata:
+                logger.warning("Failed to fetch full show metadata")
                 return False
+            
+            logger.info(f"Fetched show metadata: {show_metadata.title} ({show_metadata.year})")
 
             # Step 5: Scan and categorize episode files by season
             episodes_by_season = self._identify_episodes(source_path, season_filter)
             if not episodes_by_season:
+                logger.warning("No episodes identified for adoption")
                 return False
+            
+            total_episodes = sum(len(eps) for eps in episodes_by_season.values())
+            logger.info(f"Identified {total_episodes} episodes across {len(episodes_by_season)} seasons")
 
             # Step 6: Match episodes to metadata for each season
             matched_episodes = self._match_episodes_to_metadata(
                 show_metadata, episodes_by_season
             )
             if not matched_episodes:
+                logger.warning("Episode matching failed")
                 return False
 
             # Step 7: Generate action plan
@@ -205,9 +223,11 @@ class TVShowAdoptionWorkflow:
                 episodes_by_season=matched_episodes,
                 preserve=preserve,
             )
+            logger.info(f"Generated adoption plan with {len(plan.actions)} actions")
 
             # Step 8: Display plan and confirm
             if not self._confirm_plan(plan, force):
+                logger.info("Adoption cancelled by user")
                 self.console.print("[yellow]Adoption cancelled.[/yellow]")
                 return False
 
@@ -215,18 +235,24 @@ class TVShowAdoptionWorkflow:
             success = self._execute_plan(plan)
 
             if success:
+                logger.info(f"TV show successfully adopted: {plan.series_folder}")
                 self.console.print("\n[bold green]✓ TV show adopted successfully![/bold green]")
                 self.console.print(f"Location: {plan.series_folder}")
+            else:
+                logger.error("Plan execution failed")
 
             return success
 
         except ProviderError as e:
+            logger.error(f"Metadata provider error: {e}", exc_info=True)
             self.console.print(f"[red]Metadata provider error:[/red] {e}")
             return False
         except MoError as e:
+            logger.error(f"Error: {e}", exc_info=True)
             self.console.print(f"[red]Error:[/red] {e}")
             return False
         except Exception as e:
+            logger.exception("Unexpected error during TV show adoption")
             self.console.print(f"[red]Unexpected error:[/red] {e}")
             if self.verbose:
                 import traceback

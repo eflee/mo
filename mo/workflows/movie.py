@@ -1,6 +1,7 @@
 """Movie adoption workflow with interactive steps."""
 
 import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -22,6 +23,9 @@ from mo.providers.base import SearchResult, MovieMetadata, ProviderError
 from mo.providers.search import InteractiveSearch
 from mo.providers.tmdb import TMDBProvider
 from mo.utils.errors import MoError
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -132,28 +136,40 @@ class MovieAdoptionWorkflow:
         Returns:
             bool: True if adoption succeeded, False otherwise
         """
+        logger.info(f"Starting movie adoption workflow for: {source_path}")
+        logger.debug(f"Options: preserve={preserve}, force={force}, library={library_name}")
+        
         try:
             # Step 1: Select library
             library = self._select_library(library_name)
+            logger.info(f"Selected library: {library.name} at {library.path}")
 
             # Step 2: Parse title/year from source path
             title_hint, year_hint = self._parse_source_path(source_path)
+            logger.debug(f"Parsed from source: title={title_hint}, year={year_hint}")
 
             # Step 3: Search for metadata
             search_result = self._search_metadata(title_hint, year_hint)
             if not search_result:
+                logger.warning("Movie metadata search cancelled by user")
                 self.console.print("[yellow]Search cancelled.[/yellow]")
                 return False
 
             # Step 4: Get full metadata
             metadata = self._get_full_metadata(search_result)
             if not metadata:
+                logger.warning("Failed to fetch full metadata")
                 return False
+            
+            logger.info(f"Fetched metadata: {metadata.title} ({metadata.year})")
 
             # Step 5: Identify and categorize files
             files = self._identify_files(source_path)
             if not files:
+                logger.warning("No files identified for adoption")
                 return False
+            
+            logger.debug(f"Identified files: {sum(len(f) for f in files.values())} files")
 
             # Step 6: Generate action plan
             plan = self._generate_plan(
@@ -163,9 +179,11 @@ class MovieAdoptionWorkflow:
                 files=files,
                 preserve=preserve,
             )
+            logger.info(f"Generated adoption plan with {len(plan.actions)} actions")
 
             # Step 7: Display plan and confirm
             if not self._confirm_plan(plan, force):
+                logger.info("Adoption cancelled by user")
                 self.console.print("[yellow]Adoption cancelled.[/yellow]")
                 return False
 
@@ -173,18 +191,24 @@ class MovieAdoptionWorkflow:
             success = self._execute_plan(plan)
 
             if success:
+                logger.info(f"Movie successfully adopted: {plan.movie_folder}")
                 self.console.print("\n[bold green]✓ Movie adopted successfully![/bold green]")
                 self.console.print(f"Location: {plan.movie_folder}")
+            else:
+                logger.error("Plan execution failed")
 
             return success
 
         except ProviderError as e:
+            logger.error(f"Metadata provider error: {e}", exc_info=True)
             self.console.print(f"[red]Metadata provider error:[/red] {e}")
             return False
         except MoError as e:
+            logger.error(f"Error: {e}", exc_info=True)
             self.console.print(f"[red]Error:[/red] {e}")
             return False
         except Exception as e:
+            logger.exception("Unexpected error during movie adoption")
             self.console.print(f"[red]Unexpected error:[/red] {e}")
             if self.verbose:
                 import traceback
@@ -209,6 +233,7 @@ class MovieAdoptionWorkflow:
         ]
 
         if not movie_libraries:
+            logger.error("No movie libraries configured")
             raise MoError(
                 "No movie libraries configured. "
                 "Run: mo library add <name> movie <path>"
@@ -216,16 +241,19 @@ class MovieAdoptionWorkflow:
 
         if library_name:
             # Use specified library
+            logger.debug(f"Using specified library: {library_name}")
             return self.library_manager.get(library_name)
 
         if len(movie_libraries) == 1:
             # Auto-select single library
             lib = movie_libraries[0]
+            logger.debug(f"Auto-selected single library: {lib.name}")
             if self.verbose:
                 self.console.print(f"[dim]Using library: {lib.name}[/dim]")
             return lib
 
         # Multiple libraries - need to prompt
+        logger.debug(f"Multiple libraries found ({len(movie_libraries)}), prompting user")
         self.console.print("\n[bold]Multiple movie libraries found:[/bold]")
         table = Table()
         table.add_column("#", style="cyan")
@@ -241,10 +269,12 @@ class MovieAdoptionWorkflow:
             choice = prompt("\nSelect library (number): ", default="1").strip()
             index = int(choice) - 1
             if 0 <= index < len(movie_libraries):
+                logger.info(f"User selected library: {movie_libraries[index].name}")
                 return movie_libraries[index]
             else:
                 raise MoError("Invalid library selection")
         except ValueError:
+            logger.warning(f"Invalid library selection input: {choice}")
             raise MoError(
                 f"Invalid library selection: {choice!r}. "
                 f"Please enter a number between 1 and {len(movie_libraries)}."

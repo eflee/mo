@@ -1213,8 +1213,7 @@ All features listed below are required for v1.0 release. Each phase includes com
 **Goal:** Ensure robustness, user-friendly error messages, and comprehensive testing.
 
 - [ ] **Error handling**
-  - [ ] Network errors: retry logic with exponential backoff, fallback to cached data
-  - [ ] File system errors: permissions, disk space checks, path too long
+  - [ ] Network errors: retry logic with exponential backoff
   - [ ] Invalid configuration: helpful error messages with fix suggestions
   - [ ] Missing API keys: detect and prompt user with setup instructions
   - [ ] API rate limits: detect and pause with user notification
@@ -1222,19 +1221,16 @@ All features listed below are required for v1.0 release. Each phase includes com
   - [ ] **Unit tests:** All error scenarios, retry logic, error message formatting
 - [ ] **Logging and output**
   - [ ] Progress indicators for long operations (spinner, percentage)
+  - [ ] Console log of every action once a plan is confirmed. 
   - [ ] `--verbose` flag for detailed logging
   - [ ] `--dry-run` flag to preview actions without execution
   - [ ] Colored output for errors, warnings, success (optional, detect TTY)
-  - [ ] Structured logging to file for debugging
-  - [ ] **Unit tests:** dry-run mode
+- [ ] **Unit tests:** Ensure unit test coverage. Should be highly comprehensive. 
 - [ ] **Edge cases**
   - [ ] Empty directories: detect and warn user
-  - [ ] Duplicate files (same content hash): detect and offer deduplication
   - [ ] Special characters in filenames: sanitize properly
-  - [ ] Very long filenames: truncate intelligently with hash suffix
-  - [ ] Path length limits (Windows 260 char limit): detect and error with guidance
-  - [ ] Symbolic links: detect and handle (follow or warn)
-  - [ ] Files without extensions: detect using magic bytes or skip
+  - [ ] Symbolic links: detect and handle (follow)
+  - [ ] Files without extensions: attempt to detect using magic bytes and fix
   - [ ] Zero-byte files: detect and warn
   - [ ] **Unit tests:** All edge cases, boundary conditions
 - [ ] **Integration testing**
@@ -1244,13 +1240,9 @@ All features listed below are required for v1.0 release. Each phase includes com
   - [ ] Migration from proprietary format
   - [ ] Multi-provider fallback scenarios
   - [ ] Test data sets: sample movies and TV shows with various naming patterns
-  - [ ] **Integration tests:** Full workflows with mocked APIs and temporary file systems
+  - [ ] Full workflows with mocked APIs and temporary file systems
 - [ ] **Documentation**
   - [ ] Inline code documentation (docstrings)
-  - [ ] API documentation for key modules
-  - [ ] Troubleshooting guide
-  - [ ] FAQ section in README
-  - [ ] Example configurations
 
 
 ## License

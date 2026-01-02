@@ -5,6 +5,7 @@ Particularly useful for IMDb ratings and as a fallback source.
 Requires an API key from https://www.omdbapi.com/apikey.aspx
 """
 
+import logging
 import time
 from typing import Any, Dict, List, Optional
 
@@ -19,6 +20,8 @@ from mo.providers.base import (
     SearchResult,
 )
 from mo.providers.cache import get_cache
+
+logger = logging.getLogger(__name__)
 
 
 class OMDbProvider:
