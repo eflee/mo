@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 import shutil
 
 from rich.console import Console
@@ -252,14 +252,14 @@ class MovieAdoptionWorkflow:
         except (KeyboardInterrupt, EOFError):
             raise MoError("Library selection cancelled")
 
-    def _parse_source_path(self, source_path: Path) -> tuple[str, Optional[int]]:
+    def _parse_source_path(self, source_path: Path) -> Tuple[str, Optional[int]]:
         """Extract title and year hints from source path.
 
         Args:
             source_path: Path to parse
 
         Returns:
-            tuple[str, Optional[int]]: (title, year)
+            Tuple[str, Optional[int]]: (title, year)
         """
         # Try parsing the directory name or filename
         name = source_path.name
@@ -331,7 +331,7 @@ class MovieAdoptionWorkflow:
             source_path: Source path to scan
 
         Returns:
-            dict[str, list[Path]] | None: Categorized files or None if cancelled
+            Optional[Dict[str, List[Path]]]: Categorized files or None if cancelled
         """
         self.console.print("\n[bold cyan]Step 2: Identify Files[/bold cyan]")
 
@@ -339,11 +339,7 @@ class MovieAdoptionWorkflow:
             # Single file - treat as main movie file
             files = {"main": [source_path], "extras": [], "subtitles": [], "other": []}
         else:
-            # Directory - scan for files
-            all_files = list(source_path.rglob("*"))
-            all_files = [f for f in all_files if f.is_file()]
-
-            # Categorize files
+            # Directory - scan for files using scanner
             scan_result = self.scanner.scan_directory(source_path)
 
             # Find main video file (largest)
@@ -357,6 +353,10 @@ class MovieAdoptionWorkflow:
                 "subtitles": [],
                 "other": [],
             }
+
+            # Get all files from scan result
+            all_files = [vf.path for vf in scan_result.video_files]
+            all_files.extend([sf.path for sf in scan_result.subtitle_files])
 
             for file in all_files:
                 if file == main_file:
@@ -478,19 +478,28 @@ class MovieAdoptionWorkflow:
                 destination=extras_dir,
             ))
 
-            # Track seen filenames to handle conflicts
-            seen_filenames: Dict[str, int] = {}
+            # Track used destination filenames and per-stem counters to handle conflicts
+            seen_stems: Dict[str, int] = {}
+            used_filenames = set()
             for extra_file in files["extras"]:
-                filename = extra_file.name
+                stem = extra_file.stem
+                suffix = extra_file.suffix
 
-                # Handle duplicate filenames
-                if filename in seen_filenames:
-                    seen_filenames[filename] += 1
-                    stem = extra_file.stem
-                    suffix = extra_file.suffix
-                    filename = f"{stem}_{seen_filenames[filename]}{suffix}"
+                # Start from the last used index for this stem (0 means no suffix)
+                index = seen_stems.get(stem, 0)
+                if index == 0:
+                    filename = f"{stem}{suffix}"
                 else:
-                    seen_filenames[filename] = 1
+                    filename = f"{stem}_{index}{suffix}"
+
+                # Bump index until we find an unused destination filename
+                while filename in used_filenames:
+                    index += 1
+                    filename = f"{stem}_{index}{suffix}"
+
+                # Record the index used for this stem and the filename we chose
+                seen_stems[stem] = index
+                used_filenames.add(filename)
 
                 extra_dest = extras_dir / filename
                 actions.append(FileAction(
@@ -502,19 +511,28 @@ class MovieAdoptionWorkflow:
 
         # Subtitles
         if files["subtitles"]:
-            # Track seen filenames to handle conflicts
-            seen_filenames: Dict[str, int] = {}
+            # Track used destination filenames and per-stem counters to handle conflicts
+            seen_stems: Dict[str, int] = {}
+            used_filenames = set()
             for sub_file in files["subtitles"]:
-                filename = sub_file.name
+                stem = sub_file.stem
+                suffix = sub_file.suffix
 
-                # Handle duplicate filenames
-                if filename in seen_filenames:
-                    seen_filenames[filename] += 1
-                    stem = sub_file.stem
-                    suffix = sub_file.suffix
-                    filename = f"{stem}_{seen_filenames[filename]}{suffix}"
+                # Start from the last used index for this stem (0 means no suffix)
+                index = seen_stems.get(stem, 0)
+                if index == 0:
+                    filename = f"{stem}{suffix}"
                 else:
-                    seen_filenames[filename] = 1
+                    filename = f"{stem}_{index}{suffix}"
+
+                # Bump index until we find an unused destination filename
+                while filename in used_filenames:
+                    index += 1
+                    filename = f"{stem}_{index}{suffix}"
+
+                # Record the index used for this stem and the filename we chose
+                seen_stems[stem] = index
+                used_filenames.add(filename)
 
                 sub_dest = movie_folder / filename
                 actions.append(FileAction(
